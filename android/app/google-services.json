@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "403968429836",
+    "firebase_url": "https://pinpoint-64611.firebaseio.com",
+    "project_id": "pinpoint-64611",
+    "storage_bucket": "pinpoint-64611.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:403968429836:android:2b7e32f8a1b453726cc329",
+        "android_client_info": {
+          "package_name": "com.sara.pin_point"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "403968429836-3pcq9b0sodbiqi20ftv681l8evvvlcnv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBA-UpMPyHKfc1t1qvaq457G1u7uaiM3dQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "403968429836-3pcq9b0sodbiqi20ftv681l8evvvlcnv.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "403968429836-mh71m6hgnmmbnqu0vi95qtvuj1s7tqgo.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.sara.PinPoint"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
