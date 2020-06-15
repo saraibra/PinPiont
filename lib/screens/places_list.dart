@@ -18,9 +18,8 @@ class _PlacesListState extends State<PlacesList> {
 
   @override
   Widget build(BuildContext context) {
-    Color unselectedColor = HexColor("#333132");//deep gray
-   Color selectedColor = HexColor("#F15A29"); //orange
-
+    Color unselectedColor = HexColor("#333132"); //deep gray
+    Color selectedColor = HexColor("#F15A29"); //orange
 
     return Scaffold(
       appBar: AppBar(
@@ -63,7 +62,7 @@ class _PlacesListState extends State<PlacesList> {
                             .document(v.documents[0].documentID)
                             .updateData({'capcityReached': capcityReached}));
                       } else {
-                                                selectedColor = HexColor("#F15A29");
+                        selectedColor = HexColor("#F15A29");
 
                         capcityReached = false;
                         ref.then((v) => Firestore.instance
@@ -136,7 +135,8 @@ class _PlacesListState extends State<PlacesList> {
                                                 width: 250,
                                                 child: StepProgressIndicator(
                                                   totalSteps: 100,
-                                                  currentStep: capictyPercentage,
+                                                  currentStep:
+                                                      capictyPercentage,
                                                   size: 8,
                                                   padding: 0,
                                                   selectedColor: selectedColor,

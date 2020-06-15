@@ -5,11 +5,8 @@ import 'package:persistent_bottom_nav_bar/persistent-tab-view.widget.dart';
 import 'package:pin_point/screens/help_screen.dart';
 import 'package:pin_point/screens/notifications_screen.dart';
 import 'package:pin_point/screens/profile_screen.dart';
-import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pin_point/screens/login_screen.dart';
 import 'package:pin_point/utilities/rounded_button.dart';
 import 'package:share/share.dart';
@@ -173,6 +170,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     size: 24,
                   ),
                   title: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
                       Text(
                         "Language",
@@ -184,7 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       DropdownButton<String>(
                           hint: Text(
                             'English',
-                            style: TextStyle(color: color2),
+                            style: TextStyle(color: color1),
                           ),
                           iconEnabledColor: color1,
                           items:
@@ -193,7 +191,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 value: value,
                                 child: Text(
                                   value,
-                                  style: TextStyle(color: color2),
+                                  style: TextStyle(color: color1),
                                 ));
                           }).toList(),
                           onChanged: (_) {})

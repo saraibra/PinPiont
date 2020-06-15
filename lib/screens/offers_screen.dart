@@ -7,8 +7,8 @@ class OffersScreen extends StatefulWidget {
 }
 
 class _OffersScreenState extends State<OffersScreen> {
-    Color color2 = HexColor("#f05a2b");
-  Color color1 = HexColor("#223469");
+Color color1 = HexColor("#333132");//deep gray
+      Color color2  = HexColor("#F15A29"); //orange
 
 
 
@@ -20,7 +20,13 @@ class _OffersScreenState extends State<OffersScreen> {
         backgroundColor: color1,
       ),
       body: Center(
+    child: Text('There is no offers yet',
+    style: TextStyle(
+      color: color2,
+      fontSize: 24
+    ),
     
+    ),
       ),
     );
   }

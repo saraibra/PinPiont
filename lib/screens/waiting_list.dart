@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 
@@ -79,36 +80,21 @@ class _WaitingListState extends State<WaitingList> {
       totalSteps: totalTimeRemaining,
       currentStep: timeRemaining,
       stepSize: 10,
-      selectedColor: Colors.greenAccent,
-      unselectedColor: Colors.grey[200],
+      selectedColor: color2,
+      unselectedColor: color1,
       padding: 0,
       width: 150,
       height: 150,
       selectedStepSize: 15,
     );
 
-    /*  new CircularPercentIndicator(
-                                      radius: 130.0,
-                                      animation: true,
-                                      animationDuration: 6000,
-                                      lineWidth: 15.0,
-                                      percent: 1.0,
-                                      center: new Text(
-                                        "5"+" "+" Min",
-                                        style: new TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 20.0),
-                                      ),
-                                      circularStrokeCap: CircularStrokeCap.butt,
-                                      backgroundColor: Colors.yellow,
-                                      progressColor: Colors.red,
-                                    );*/
+  
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('WAITING LIST'), backgroundColor: color1),
+      appBar: AppBar(title: Text('Waiting List'), backgroundColor: color1),
       body: status
           ? Center(
               child: StreamBuilder(
@@ -154,7 +140,7 @@ class _WaitingListState extends State<WaitingList> {
                               child: Container(
                                   width: MediaQuery.of(context).size.width,
                                   height: MediaQuery.of(context).size.height,
-                                  color: color2,
+                                  color: Colors.white,
                                   child: Column(children: <Widget>[
                                     ListTile(
                                       title: Padding(
@@ -166,24 +152,28 @@ class _WaitingListState extends State<WaitingList> {
                                           style: TextStyle(
                                               fontSize: 36,
                                               fontWeight: FontWeight.bold,
-                                              color: Colors.white),
+                                              color: color2),
                                         ),
                                       ),
                                     ),
                                     difference==0?SizedBox(
   width: 250.0,
-  child: ScaleAnimatedTextKit(
-    
-    text: [
-      "Time",
-      "Out",
-      ],
-    textStyle: TextStyle(
-        fontSize: 70.0,
-        fontFamily: "Canterbury"
+  child: Padding(
+    padding: const EdgeInsets.all(16.0),
+    child: ScaleAnimatedTextKit(
+      
+      text: [
+        "Time",
+        "Out",
+        ],
+      textStyle: TextStyle(
+          fontSize: 70.0,
+          fontFamily: "Canterbury",
+          color: color1
+      ),
+      textAlign: TextAlign.start,
+      alignment: AlignmentDirectional.topStart // or Alignment.topLeft
     ),
-    textAlign: TextAlign.start,
-    alignment: AlignmentDirectional.topStart // or Alignment.topLeft
   ),
 ):
                                     showTimeRemaining(difference, time),
@@ -191,14 +181,14 @@ class _WaitingListState extends State<WaitingList> {
                                       title: Padding(
                                         padding: const EdgeInsets.only(
                                             left: 24.0, top: 16),
-                                        child: Row(
+                                        child:difference >0 ?Row(
                                           children: <Widget>[
                                             Text(
                                               list[index]['updatedTime']
                                                   .toString(),
                                               style: TextStyle(
                                                   fontSize: 20,
-                                                  color: Colors.white),
+                                                  color: color1),
                                             ),
                                             Padding(
                                               padding: const EdgeInsets.only(
@@ -206,24 +196,24 @@ class _WaitingListState extends State<WaitingList> {
                                               child: Text('Min remaining',
                                                   style: TextStyle(
                                                       fontSize: 20,
-                                                      color: Colors.white)),
+                                                      color: color1)),
                                             )
                                           ],
-                                        ),
+                                        ):Container(),
                                       ),
                                     ),
                                     ListTile(
                                       title: Padding(
                                         padding: const EdgeInsets.only(
                                             left: 24.0, top: 4),
-                                        child: Row(
+                                        child:difference>0? Row(
                                           children: <Widget>[
                                             Text(
                                               list[index]['customerInWaiting']
                                                   .toString(),
                                               style: TextStyle(
                                                   fontSize: 20,
-                                                  color: Colors.white),
+                                                  color: color1),
                                             ),
                                             Padding(
                                               padding: const EdgeInsets.only(
@@ -231,10 +221,10 @@ class _WaitingListState extends State<WaitingList> {
                                               child: Text('people in the queue',
                                                   style: TextStyle(
                                                       fontSize: 20,
-                                                      color: Colors.white)),
+                                                      color: color1)),
                                             )
                                           ],
-                                        ),
+                                        ):Container(),
                                       ),
                                     ),
                                   ])),

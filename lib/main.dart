@@ -111,12 +111,12 @@ class _MyAppState extends State<MyApp> {
           },
           home: Scaffold(
             body: new SplashScreen(
-                seconds: 14,
+                seconds: 10,
                 navigateAfterSeconds: BottomNavigation(),
-                image: new Image.asset('images/pinpoint.png'),
-                backgroundColor: color1,
+                image: new Image.asset('images/logo.png'),
+                backgroundColor: Colors.white,
                 styleTextUnderTheLoader: new TextStyle(),
-                photoSize: 100.0,
+                photoSize: 200.0,
                 loaderColor: color2),
           )
           // home: new HomeScreen(),

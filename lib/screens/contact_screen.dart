@@ -47,8 +47,7 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
       setState(() {
         showSpinner = true;
       });
-    }
-    Firestore.instance
+       Firestore.instance
         .collection('users_complaints')
         .document(user.uid)
         .setData({
@@ -61,6 +60,8 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
         isProblemSent = true;
       });
     });
+    }
+   
   }
 
   @override
@@ -138,12 +139,13 @@ class _ContactUsScreenState extends State<ContactUsScreen> {
                           child: Center(
                           child: SizedBox(
                             width: double.infinity,
-                            height: 100,
-                            child: Text(
-                              
-                              'Your complaint is sent successfuly and we will look into your' 
-                             +'will look into your complaint and get back to you shortly ',
-                              style: TextStyle(fontSize: 18.0, color: color2),
+                            child: Padding(
+                              padding: const EdgeInsets.all(8.0),
+                              child: Text(
+                                
+                                'Your complaint is sent successfuly and we will look into your complaint and get back to you shortly ',
+                                style: TextStyle( fontSize: 20,color: color2),
+                              ),
                             ),
                           ),
                         )))

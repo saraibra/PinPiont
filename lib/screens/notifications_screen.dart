@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_vibrate/flutter_vibrate.dart';
 import 'package:pin_point/style/hexa_color.dart';
-import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 
 class NotificationsScreen extends StatefulWidget {
   @override
@@ -57,18 +56,34 @@ init() async {
           ),
           Divider(),
             ListTile(
-            title: Text(
-                  'Notifications tone',
-                  style: TextStyle(color: color1, fontSize: 20),
-                ),
+            title: Column(
+              children: <Widget>[
+                Text(
+                      'Notifications time',
+                      style: TextStyle(color: color1, fontSize: 20),
+                    ),
+                                DropdownButton<String>(
+                          hint: Text(
+                            'On time',
+                            style: TextStyle(color: color1),
+                          ),
+                          iconEnabledColor: color1,
+                          items:
+                              <String>['On time', '5 Min before time'].map((String value) {
+                            return new DropdownMenuItem(
+                                value: value,
+                                child: Text(
+                                  value,
+                                  style: TextStyle(color: color1),
+                                ));
+                          }).toList(),
+                          onChanged: (_) {})
+                  
+              ],
+            ),
                 onTap: (){
-                  FlutterRingtonePlayer.play(
-  android: AndroidSounds.notification,
-  ios: IosSounds.glass,
-  looping: true, // Android only - API >= 28
-  volume: 0.1, // Android only - API >= 28
-  asAlarm: false, // Android only - all APIs
-);
+                  
+
 
                 },
           ),

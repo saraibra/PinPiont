@@ -22,6 +22,7 @@ class _AppInfoState extends State<AppInfo> {
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Text(
                     'PinPoint',
@@ -35,6 +36,17 @@ class _AppInfoState extends State<AppInfo> {
                     'Version 1.0.0',
                     style: TextStyle(fontSize: 18, color: color2),
                   ),
+                  
+                       Padding(
+                         padding: const EdgeInsets.all(8.0),
+                         child: Container(
+                           child: Image.asset(
+              'images/icon5.png',
+             
+              fit: BoxFit.fill,
+            ),
+                         ),
+                       ),
                 ],
               ),
             ),
