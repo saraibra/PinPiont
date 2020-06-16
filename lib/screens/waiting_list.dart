@@ -8,8 +8,6 @@ import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 
-
-
 class WaitingList extends StatefulWidget {
   @override
   _WaitingListState createState() => _WaitingListState();
@@ -23,17 +21,15 @@ class _WaitingListState extends State<WaitingList> {
   int difference;
   int timeRemaining;
   final FirebaseAuth _auth = FirebaseAuth.instance;
-  
-      Color color1 = HexColor("#333132");//deep gray
-      Color color2  = HexColor("#F15A29"); //orange
+
+  Color color1 = HexColor("#333132"); //deep gray
+  Color color2 = HexColor("#F15A29"); //orange
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
       FlutterLocalNotificationsPlugin();
   AndroidInitializationSettings initializationSettingsAndroid;
   IOSInitializationSettings initializationSettingsIOS;
   InitializationSettings initializationSettings;
-
-
 
   @override
   void initState() {
@@ -87,8 +83,6 @@ class _WaitingListState extends State<WaitingList> {
       height: 150,
       selectedStepSize: 15,
     );
-
-  
   }
 
   @override
@@ -113,7 +107,6 @@ class _WaitingListState extends State<WaitingList> {
                       final logTime = list[0]['logTime'].toDate();
                       final finTime = list[0]['finTime'].toDate();
                       final DateTime timeNow = DateTime.now();
-
                       var nowTimeSeconds =
                           timeNow.toUtc().millisecondsSinceEpoch;
                       var finTimeSeconds =
@@ -121,11 +114,11 @@ class _WaitingListState extends State<WaitingList> {
                       if (finTimeSeconds > nowTimeSeconds) {
                         difference = timeNow.difference(logTime).inMinutes;
                         timeRemaining = time - difference;
+                        print(time.toString());
                       } else {
                         difference = 0;
                         timeRemaining = 0;
                       }
-                     
 
                       Firestore.instance
                           .collection("user_places")
@@ -156,75 +149,84 @@ class _WaitingListState extends State<WaitingList> {
                                         ),
                                       ),
                                     ),
-                                    difference==0?SizedBox(
-  width: 250.0,
-  child: Padding(
-    padding: const EdgeInsets.all(16.0),
-    child: ScaleAnimatedTextKit(
-      
-      text: [
-        "Time",
-        "Out",
-        ],
-      textStyle: TextStyle(
-          fontSize: 70.0,
-          fontFamily: "Canterbury",
-          color: color1
-      ),
-      textAlign: TextAlign.start,
-      alignment: AlignmentDirectional.topStart // or Alignment.topLeft
-    ),
-  ),
-):
-                                    showTimeRemaining(difference, time),
+                                    difference == 0
+                                        ? SizedBox(
+                                            width: 250.0,
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.all(16.0),
+                                              child: ScaleAnimatedTextKit(
+                                                  text: [
+                                                    "Time",
+                                                    "Out",
+                                                  ],
+                                                  textStyle: TextStyle(
+                                                      fontSize: 70.0,
+                                                      fontFamily: "Canterbury",
+                                                      color: color1),
+                                                  textAlign: TextAlign.start,
+                                                  alignment: AlignmentDirectional
+                                                      .topStart // or Alignment.topLeft
+                                                  ),
+                                            ),
+                                          )
+                                        : showTimeRemaining(difference, time),
                                     ListTile(
                                       title: Padding(
                                         padding: const EdgeInsets.only(
-                                            left: 24.0, top: 16),
-                                        child:difference >0 ?Row(
-                                          children: <Widget>[
-                                            Text(
-                                              list[index]['updatedTime']
-                                                  .toString(),
-                                              style: TextStyle(
-                                                  fontSize: 20,
-                                                  color: color1),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 8.0),
-                                              child: Text('Min remaining',
-                                                  style: TextStyle(
-                                                      fontSize: 20,
-                                                      color: color1)),
-                                            )
-                                          ],
-                                        ):Container(),
+                                            left: 48.0, top: 16),
+                                        child: difference > 0
+                                            ? Row(
+                                                children: <Widget>[
+                                                  Text(
+                                                    list[index]['updatedTime']
+                                                        .toString(),
+                                                    style: TextStyle(
+                                                        fontSize: 20,
+                                                        color: color1),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 8.0),
+                                                    child: Text('Min remaining',
+                                                        style: TextStyle(
+                                                            fontSize: 20,
+                                                            color: color1)),
+                                                  )
+                                                ],
+                                              )
+                                            : Container(),
                                       ),
                                     ),
                                     ListTile(
                                       title: Padding(
                                         padding: const EdgeInsets.only(
-                                            left: 24.0, top: 4),
-                                        child:difference>0? Row(
-                                          children: <Widget>[
-                                            Text(
-                                              list[index]['customerInWaiting']
-                                                  .toString(),
-                                              style: TextStyle(
-                                                  fontSize: 20,
-                                                  color: color1),
-                                            ),
-                                            Padding(
-                                              padding: const EdgeInsets.only(
-                                                  left: 8.0),
-                                              child: Text('people in the queue',
-                                                  style: TextStyle(
-                                                      fontSize: 20,
-                                                      color: color1)),
-                                            )
-                                          ],
-                                        ):Container(),
+                                            left: 48.0, top: 4),
+                                        child: difference > 0
+                                            ? Row(
+                                                children: <Widget>[
+                                                  Text(
+                                                    list[index][
+                                                            'customerInWaiting']
+                                                        .toString(),
+                                                    style: TextStyle(
+                                                        fontSize: 20,
+                                                        color: color1),
+                                                  ),
+                                                  Padding(
+                                                    padding:
+                                                        const EdgeInsets.only(
+                                                            left: 8.0),
+                                                    child: Text(
+                                                        'people in the queue',
+                                                        style: TextStyle(
+                                                            fontSize: 20,
+                                                            color: color1)),
+                                                  )
+                                                ],
+                                              )
+                                            : Container(),
                                       ),
                                     ),
                                   ])),

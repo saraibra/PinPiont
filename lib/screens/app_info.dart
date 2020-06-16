@@ -37,17 +37,17 @@ class _AppInfoState extends State<AppInfo> {
                     style: TextStyle(fontSize: 18, color: color2),
                   ),
                   
-                       Padding(
-                         padding: const EdgeInsets.all(8.0),
-                         child: Container(
+                       
+                      Container(
+                           width: 150,
+                           height: 150,
                            child: Image.asset(
-              'images/icon5.png',
+              'images/logo.png',
              
               fit: BoxFit.fill,
             ),
                          ),
-                       ),
-                ],
+],
               ),
             ),
           ),

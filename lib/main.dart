@@ -116,7 +116,7 @@ class _MyAppState extends State<MyApp> {
                 image: new Image.asset('images/logo.png'),
                 backgroundColor: Colors.white,
                 styleTextUnderTheLoader: new TextStyle(),
-                photoSize: 200.0,
+                photoSize: 100.0,
                 loaderColor: color2),
           )
           // home: new HomeScreen(),

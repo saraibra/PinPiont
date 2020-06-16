@@ -24,6 +24,32 @@ class _PlaceScreenState extends State<PlaceScreen> {
   TextEditingController _phoneController;
   String name, phone;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  FirebaseUser user;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool status = false;
+  Future<void> checkUser() async {
+    user = await _auth.currentUser();
+
+    if (user != null) {
+      //it exists
+      setState(() {
+        status = true;
+      });
+    } else {
+      //not exists
+      setState(() {
+        status = false;
+      });
+    }
+  }
+
+  @override
+  void initState() {
+    checkUser();
+
+    super.initState();
+  }
+
   @override
   void dispose() {}
   @override
@@ -143,194 +169,189 @@ class _PlaceScreenState extends State<PlaceScreen> {
                                       color: color2,
                                       size: 36,
                                     ),
-                                    onPressed: () async {
-                                      FirebaseUser user;
-
-                                      final FirebaseAuth _auth =
-                                          FirebaseAuth.instance;
-
-                                      user = await _auth.currentUser();
-                                      showDialog(
-                                          context: context,
-                                          child: Dialog(
-                                            child: Padding(
-                                              padding:
-                                                  const EdgeInsets.all(8.0),
-                                              child: Card(
-                                                elevation: 4,
-                                                child: Container(
-                                                  decoration: new BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: new BorderRadius.only(
-                                      topLeft: const Radius.circular(16.0),
-                                      topRight: const Radius.circular(16.0),
-                                      bottomLeft: const Radius.circular(16.0),
-                                      bottomRight: const Radius.circular(16.0),
-                                    )),
-                                                  height: 250,
-                                                  child: Form(
-                                                    key: _formKey,
-                                                    child: Column(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: <Widget>[
-                                                        Text(
-                                                          "Waiting list form",
-                                                          style: TextStyle(
-                                                              fontSize: 20,
-                                                              color: color2,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold),
-                                                        ),
-                                                        new TextFormField(
-                                                          validator:
-                                                              (String value) {
-                                                            if (value.isEmpty) {
-                                                              return 'Please enter your name !';
-                                                            }
-                                                          },
-                                                          keyboardType:
-                                                              TextInputType
-                                                                  .text,
-                                                          decoration:
-                                                              KTextFieldDecoration
-                                                                  .copyWith(
-                                                                      hintText:
-                                                                          'Name'),
-                                                          onSaved: (input) =>
-                                                              name = input,
-                                                        ),
-                                                        new TextFormField(
-                                                          validator:
-                                                              (String value) {
-                                                            if (value.isEmpty) {
-                                                              return 'Please enter your phone number !';
-                                                            }
-                                                          },
-                                                          keyboardType:
-                                                              TextInputType
-                                                                  .number,
-                                                          decoration:
-                                                              KTextFieldDecoration
-                                                                  .copyWith(
-                                                                      hintText:
-                                                                          'Phone number '),
-                                                          onSaved: (input) =>
-                                                              phone = input,
-                                                        ),
-                                                        Row(
-                                                          mainAxisAlignment:
-                                                              MainAxisAlignment
-                                                                  .spaceBetween,
-                                                          children: <Widget>[
-                                                            IconButton(
-                                                                icon: Icon(
-                                                                  Icons.check,
-                                                                  color: color2,
+                                    onPressed: status
+                                        ? () async {
+                                            user = await _auth.currentUser();
+                                            showDialog(
+                                                context: context,
+                                                child: Card(
+                                                  elevation: 4,
+                                                  child: Container(
+                                                    height:200,
+                                                    decoration:
+                                                        new BoxDecoration(
+                                                            color: Colors.white,
+                                                            borderRadius:
+                                                                new BorderRadius
+                                                                    .only(
+                                                              topLeft: const Radius
+                                                                      .circular(
+                                                                  16.0),
+                                                              topRight: const Radius
+                                                                      .circular(
+                                                                  16.0),
+                                                              bottomLeft:
+                                                                  const Radius
+                                                                          .circular(
+                                                                      16.0),
+                                                              bottomRight:
+                                                                  const Radius
+                                                                          .circular(
+                                                                      16.0),
+                                                            )),
+                                                    child: Dialog(
+                                                      child: Padding(
+                                                        padding:
+                                                            const EdgeInsets
+                                                                .all(8.0),
+                                                        child: Container(
+                                                          height: 300,
+                                                          child: Form(
+                                                            key: _formKey,
+                                                            child: Column(
+                                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                              children: <Widget>[
+                                                                Text(
+                                                                  "Waiting list form",
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          20,
+                                                                      color:
+                                                                          color2,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold),
                                                                 ),
-                                                                onPressed: () {
-                                                                  if (_formKey
-                                                                      .currentState
-                                                                      .validate()) {
-                                                                    _formKey
-                                                                        .currentState
-                                                                        .save();
-                                                                    try {
-                                                                      int customerInWaiting =
-                                                                          10;
-                                                                      int waitTimeForPlace =
-                                                                          5;
-                                                                      int time =
-                                                                          customerInWaiting *
-                                                                              waitTimeForPlace;
-                                                                      final DateTime
-                                                                          finTime =
-                                                                          time.minutes
-                                                                              .fromNow;
-                                                                      final DateTime
-                                                                          logTime =
-                                                                          DateTime
-                                                                              .now();
-                                                                      print(finTime
-                                                                          .toString());
-
-                                                                      Firestore
-                                                                          .instance
-                                                                          .collection(
-                                                                              'user_places')
-                                                                          .document(
-                                                                              user.uid)
-                                                                          .setData({
-                                                                        'placeName':
-                                                                            widget.title,
-                                                                        'userName':
-                                                                            name,
-                                                                        'phoneNumber':
-                                                                            phone,
-                                                                        'customerInWaiting':
-                                                                            customerInWaiting,
-                                                                        'timeRemaining':
-                                                                            time,
-                                                                        'updatedTime':
-                                                                            0,
-                                                                        'logTime':
-                                                                            logTime,
-                                                                        'finTime':
-                                                                            finTime,
-                                                                        'placeId':
-                                                                            widget.id,
-                                                                        'userId':
-                                                                            user.uid,
-                                                                               'allowNotifications':
-                                                                            true,
-                                                                               'NotificationTime':
-                                                                            true,
-
-                                                                      });
-                                                                      Fluttertoast.showToast(
-                                                                          msg:
-                                                                              "User is successfully added to waiting list",
-                                                                          toastLength: Toast
-                                                                              .LENGTH_SHORT,
-                                                                          gravity: ToastGravity
-                                                                              .CENTER,
-                                                                          timeInSecForIosWeb:
-                                                                              1,
-                                                                          backgroundColor:
-                                                                              color2,
-                                                                          textColor: Colors
-                                                                              .white,
-                                                                          fontSize:
-                                                                              16.0);
-                                                                      Navigator.pop(
-                                                                          context);
-                                                                    } catch (e) {
-                                                                      showError(
-                                                                          e.message);
+                                                                new TextFormField(
+                                                                  validator:
+                                                                      (String
+                                                                          value) {
+                                                                    if (value
+                                                                        .isEmpty) {
+                                                                      return 'Please enter your name !';
                                                                     }
-                                                                  }
-                                                                }),
-                                                            IconButton(
-                                                              icon: Icon(
-                                                                Icons.close,
-                                                                color: color2,
-                                                              ),
-                                                              onPressed: () =>
-                                                                  Navigator.pop(
-                                                                      context),
-                                                            )
-                                                          ],
-                                                        )
-                                                      ],
+                                                                  },
+                                                                  keyboardType:
+                                                                      TextInputType
+                                                                          .text,
+                                                                  decoration: KTextFieldDecoration
+                                                                      .copyWith(
+                                                                          hintText:
+                                                                              'Name'),
+                                                                  onSaved:
+                                                                      (input) =>
+                                                                          name =
+                                                                              input,
+                                                                ),
+                                                                new TextFormField(
+                                                                  validator:
+                                                                      (String
+                                                                          value) {
+                                                                    if (value
+                                                                        .isEmpty) {
+                                                                      return 'Please enter your phone number !';
+                                                                    }
+                                                                  },
+                                                                  keyboardType:
+                                                                      TextInputType
+                                                                          .number,
+                                                                  decoration: KTextFieldDecoration
+                                                                      .copyWith(
+                                                                          hintText:
+                                                                              'Phone number '),
+                                                                  onSaved:
+                                                                      (input) =>
+                                                                          phone =
+                                                                              input,
+                                                                ),
+                                                                Row(
+                                                                  mainAxisAlignment:
+                                                                      MainAxisAlignment
+                                                                          .spaceBetween,
+                                                                  children: <
+                                                                      Widget>[
+                                                                    IconButton(
+                                                                        icon:
+                                                                            Icon(
+                                                                          Icons
+                                                                              .check,
+                                                                          color:
+                                                                              color2,
+                                                                        ),
+                                                                        onPressed:
+                                                                            () {
+                                                                          if (_formKey
+                                                                              .currentState
+                                                                              .validate()) {
+                                                                            _formKey
+                                                                                .currentState
+                                                                                .save();
+                                                                            try {
+                                                                              int customerInWaiting =
+                                                                                  10;
+                                                                              int waitTimeForPlace =
+                                                                                  5;
+                                                                              int time =
+                                                                                  customerInWaiting * waitTimeForPlace;
+                                                                              final DateTime
+                                                                                  finTime =
+                                                                                  time.minutes.fromNow;
+                                                                              final DateTime
+                                                                                  logTime =
+                                                                                  DateTime.now();
+                                                                              print(finTime.toString());
+
+                                                                              Firestore.instance.collection('user_places').document(user.uid).setData({
+                                                                                'placeName': widget.title,
+                                                                                'userName': name,
+                                                                                'phoneNumber': phone,
+                                                                                'customerInWaiting': customerInWaiting,
+                                                                                'timeRemaining': time,
+                                                                                'updatedTime': 0,
+                                                                                'logTime': logTime,
+                                                                                'finTime': finTime,
+                                                                                'placeId': widget.id,
+                                                                                'userId': user.uid,
+                                                                                'allowNotifications': true,
+                                                                                'NotificationTime': true,
+                                                                              });
+                                                                              Fluttertoast.showToast(
+                                                                                  msg: "User is successfully added to waiting list",
+                                                                                  toastLength: Toast.LENGTH_SHORT,
+                                                                                  gravity: ToastGravity.CENTER,
+                                                                                  timeInSecForIosWeb: 1,
+                                                                                  backgroundColor: color2,
+                                                                                  textColor: Colors.white,
+                                                                                  fontSize: 16.0);
+                                                                              Navigator.pop(context);
+                                                                            } catch (e) {
+                                                                              showError(e.message);
+                                                                            }
+                                                                          }
+                                                                        }),
+                                                                    IconButton(
+                                                                      icon: Icon(
+                                                                        Icons
+                                                                            .close,
+                                                                        color:
+                                                                            color2,
+                                                                      ),
+                                                                      onPressed: () =>
+                                                                          Navigator.pop(
+                                                                              context),
+                                                                    )
+                                                                  ],
+                                                                )
+                                                              ],
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                              ),
-                                            ),
-                                          ));
-                                    }),
+                                                ));
+                                          }
+                                        : null),
                               )
                             : SizedBox()
                       ],

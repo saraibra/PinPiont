@@ -69,6 +69,41 @@ class _HomeScreenState extends State<HomeScreen> {
   AndroidInitializationSettings initializationSettingsAndroid;
   IOSInitializationSettings initializationSettingsIOS;
   InitializationSettings initializationSettings;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool status = false;
+  bool val = true;
+  bool notificationTime = true;
+  Future<void> checkUser() async {
+    user = await _auth.currentUser();
+
+    if (user != null) {
+      final snapShot = await Firestore.instance
+          .collection('user_places')
+          .document(user.uid)
+          .get();
+      if (snapShot.exists) {
+        DocumentReference documentReference =
+            Firestore.instance.collection("user_places").document(user.uid);
+        documentReference.get().then((datasnapshot) {
+          if (datasnapshot.exists) {
+            val = datasnapshot.data['allowNotifications'];
+            notificationTime = datasnapshot.data['notificationTime'];
+          }
+        });
+      }
+      //it exists
+      setState(() {
+        status = true;
+      });
+    } else {
+      //not exists
+      setState(() {
+        status = false;
+      });
+    }
+  }
+
+
   setMarkers() {
     return allMarkers;
   }
@@ -310,7 +345,7 @@ class _HomeScreenState extends State<HomeScreen> {
     getUserDoc();
     getData();
      initializing();
-
+checkUser() ;
       showNotifications();
     if (widget.searchActive != null) {
       if (widget.searchActive) {
@@ -407,7 +442,7 @@ final _destination = Location(
              navigateToSearchPlace(widget.searchName),
                  floatingActionButton: FloatingActionButton(
                 child: FaIcon(
-                  FontAwesomeIcons.list,
+                  FontAwesomeIcons.car,
                   color: Colors.white,
                 ),
                 onPressed: () async {
