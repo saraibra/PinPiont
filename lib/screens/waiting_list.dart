@@ -114,7 +114,6 @@ class _WaitingListState extends State<WaitingList> {
                       if (finTimeSeconds > nowTimeSeconds) {
                         difference = timeNow.difference(logTime).inMinutes;
                         timeRemaining = time - difference;
-                        print(time.toString());
                       } else {
                         difference = 0;
                         timeRemaining = 0;

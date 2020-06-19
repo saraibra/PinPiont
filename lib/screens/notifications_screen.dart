@@ -128,7 +128,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                           style: TextStyle(color: color1),
                         ),
                         iconEnabledColor: color1,
-                        items: <String>['On time', '5 Min before time']
+                        items: <String>['On time', '15 Min before time']
                             .map((String value) {
                           return new DropdownMenuItem(
                               value: value,
@@ -138,7 +138,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                               ));
                         }).toList(),
                         onChanged: (value) {
-                          if (value == '5 Min before time') {
+                          if (value == '15 Min before time') {
                             Firestore.instance
                                 .collection('user_places')
                                 .document(user.uid)

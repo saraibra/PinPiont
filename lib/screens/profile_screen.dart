@@ -25,11 +25,13 @@ enum AppState {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Color color1 = HexColor("#333132");//deep gray
-      Color color2  = HexColor("#F15A29"); //orange
+  Color color1 = HexColor("#333132"); //deep gray
+  Color color2 = HexColor("#F15A29"); //orange
   String updatedName;
+  String phone;
   AppState state;
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final GlobalKey<FormState> _formKey1 = GlobalKey<FormState>();
 
   FirebaseUser user;
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -104,6 +106,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Widget _buildPhoneFormText() {
+    return Form(
+      key: _formKey1,
+      child: TextFormField(
+        keyboardType: TextInputType.phone,
+        decoration:
+            KTextFieldDecoration.copyWith(hintText: 'Enter your phone number'),
+        validator: (String value) {
+          if (value.isEmpty) {
+            return 'Please enter your phone number!';
+          }
+        },
+        onSaved: (input) => phone = input,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     Future<Widget> getImage(BuildContext context) async {
@@ -146,68 +165,116 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     Future<Widget> updateName(BuildContext context) async {
       return showModalBottomSheet(
-            isScrollControlled: true,
-
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+          ),
+          isScrollControlled: true,
           context: context,
-          builder: (builder) {
-            return new AnimatedPadding(
-            padding: MediaQuery.of(context).viewInsets,
-            duration: const Duration(milliseconds: 100),
-            curve: Curves.decelerate,
-              child: new Container(
-                height: 200,
-              alignment: Alignment.bottomCenter,
-                //could change this to Color(0xFF737373),
-                //so you don't have to change MaterialApp canvasColor
-               
-                    decoration: new BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: new BorderRadius.only(
-                            topLeft: const Radius.circular(10.0),
-                            topRight: const Radius.circular(10.0))),
-                    child: new Center(
-        
-                        child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
- 
-                          children: <Widget>[
-                            Text('Update user name'),
-                            
-                              _buildFirstNameFormText(),
-                           
-                         Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: <Widget>[
-                                  IconButton(
-                                      icon: Icon(Icons.check),
-                                      onPressed: () {
-                                        if (_formKey.currentState.validate()) {
-                                          _formKey.currentState.save();
-                                          _updateUserName(updatedName);
-                                        }
-                                      }),
-                                  IconButton(
-                                      icon: Icon(Icons.close),
-                                      onPressed: () =>
-                                          Navigator.of(context).pop())
-                                ],
+          builder: (context) {
+            return Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
+                child: Container(
+                  width: double.infinity,
+                  height: 350,
+                  child: Column(
+                    children: <Widget>[
+                      Text(
+                        'Update user name',
+                        style: TextStyle(fontSize: 24, color: color2),
+                      ),
+                      SizedBox(
+                        height: 16,
+                      ),
+                      _buildFirstNameFormText(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          IconButton(
+                              icon: Icon(
+                                Icons.check,
+                                color: color2,
+                                size: 32,
                               ),
-                        
-                          ],
-                        ),
-                      
-                    )
-                    //),
-              ),
-            );
+                              onPressed: () {
+                                if (_formKey.currentState.validate()) {
+                                  _formKey.currentState.save();
+                                  _updateUserName(updatedName);
+                                  Navigator.of(context).pop();
+                                }
+                              }),
+                          IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                color: color2,
+                                size: 32,
+                              ),
+                              onPressed: () => Navigator.of(context).pop())
+                        ],
+                      ),
+                    ],
+                  ),
+                ));
+          });
+    }
+
+    Future<Widget> updatePhoneNumber(BuildContext context) async {
+      return showModalBottomSheet(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
+          ),
+          isScrollControlled: true,
+          context: context,
+          builder: (context) {
+            return Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
+                child: Container(
+                  width: double.infinity,
+                  height: 350,
+                  child: Column(
+                    children: <Widget>[
+                      Text(
+                        'Update phone number',
+                        style: TextStyle(fontSize: 24, color: color2),
+                      ),
+                      SizedBox(
+                        height: 16,
+                      ),
+                      _buildPhoneFormText(),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                          IconButton(
+                              icon: Icon(
+                                Icons.check,
+                                color: color2,
+                                size: 32,
+                              ),
+                              onPressed: () {
+                                if (_formKey1.currentState.validate()) {
+                                  _formKey1.currentState.save();
+                                  _updateUserPhone(phone);
+                                  Navigator.of(context).pop();
+                                }
+                              }),
+                          IconButton(
+                              icon: Icon(
+                                Icons.close,
+                                color: color2,
+                                size: 32,
+                              ),
+                              onPressed: () => Navigator.of(context).pop())
+                        ],
+                      ),
+                    ],
+                  ),
+                ));
           });
     }
 
     return Scaffold(
-              resizeToAvoidBottomPadding: false,
-
+        resizeToAvoidBottomPadding: false,
         appBar: AppBar(
           leading: IconButton(
               icon: Icon(FontAwesomeIcons.arrowLeft),
@@ -299,32 +366,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                               title: Text(
                                                 "User name",
                                                 style: TextStyle(
-                                                    fontSize: 20,
+                                                    fontSize: 18,
                                                     fontWeight: FontWeight.bold,
                                                     color: color1),
                                               ),
                                               subtitle: Padding(
                                                 padding:
                                                     const EdgeInsets.all(8.0),
-                                                child: Row(
-                                                  children: <Widget>[
-                                                    Text(
-                                                      snapshot
-                                                          .data['firstName'],
-                                                      style: TextStyle(
-                                                          fontSize: 20,
-                                                          color: Colors.black),
-                                                    ),
-                                                    SizedBox(
-                                                      width: 4,
-                                                    ),
-                                                    Text(
-                                                      list['lastName'],
-                                                      style: TextStyle(
-                                                          fontSize: 20,
-                                                          color: Colors.black),
-                                                    ),
-                                                  ],
+                                                child: SingleChildScrollView(
+                                                  scrollDirection:
+                                                      Axis.horizontal,
+                                                  child: Row(
+                                                    children: <Widget>[
+                                                      Text(
+                                                        snapshot
+                                                            .data['firstName'],
+                                                        style: TextStyle(
+                                                            fontSize: 18,
+                                                            color:
+                                                                Colors.black),
+                                                      ),
+                                                      SizedBox(
+                                                        width: 4,
+                                                      ),
+                                                      Text(
+                                                        list['lastName'],
+                                                        style: TextStyle(
+                                                            fontSize: 18,
+                                                            color:
+                                                                Colors.black),
+                                                      ),
+                                                    ],
+                                                  ),
                                                 ),
                                               ),
                                               onTap: () => updateName(context),
@@ -334,6 +407,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                             ),
                                             Divider(),
                                             ListTile(
+                                                onTap: () =>
+                                                    updatePhoneNumber(context),
                                                 leading: Icon(
                                                   Icons.phone_android,
                                                   color: color1,
@@ -361,31 +436,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                                     onPressed: () {})),
                                             Divider(),
                                             ListTile(
-                                                leading: Icon(
-                                                  Icons.email,
-                                                  color: color1,
-                                                ),
-                                                title: Text(
-                                                  "Email",
+                                              leading: Icon(
+                                                Icons.email,
+                                                color: color1,
+                                              ),
+                                              title: Text(
+                                                "Email",
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight: FontWeight.bold,
+                                                    color: color1),
+                                              ),
+                                              subtitle: Padding(
+                                                padding:
+                                                    const EdgeInsets.all(8.0),
+                                                child: Text(
+                                                  list['email'],
                                                   style: TextStyle(
                                                       fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: color1),
+                                                      color: Colors.black),
                                                 ),
-                                                subtitle: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: Text(
-                                                    list['email'],
-                                                    style: TextStyle(
-                                                        fontSize: 18,
-                                                        color: Colors.black),
-                                                  ),
-                                                ),
-                                                trailing: IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed: () {})),
+                                              ),
+                                            ),
                                             Divider(),
                                             ListTile(
                                               leading: FaIcon(
@@ -474,6 +546,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   _updateUserName(String name) {
     Firestore.instance.collection('users').document(user.uid).updateData({
       'firstName': name,
+    });
+     Firestore.instance.collection('users').document(user.uid).updateData({
+      'lastName': '',
+    });
+  }
+
+  _updateUserPhone(String phone) {
+    Firestore.instance.collection('users').document(user.uid).updateData({
+      'phone': phone,
     });
   }
 }

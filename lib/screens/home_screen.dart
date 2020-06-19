@@ -1,7 +1,11 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_mapbox_navigation/flutter_mapbox_navigation.dart';
@@ -11,8 +15,8 @@ import 'package:latlong/latlong.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.widget.dart';
 import 'package:pin_point/screens/places_list.dart';
 import 'package:pin_point/search/place_delegate.dart';
+import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
-import 'package:pin_point/utilities/drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   final String searchName;
@@ -38,22 +42,35 @@ enum AppState {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+// for internet connection
+  BuildContext ctx;
+  bool canProceed = true;
 
-    
-   String _platformVersion = 'Unknown';
+  bool isOffline = false;
+  bool dialogIsVisible = false;
+
+  final Connectivity _connectivity = Connectivity();
+  StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  //
+
+  String _platformVersion = 'Unknown';
 
   MapboxNavigation _directions;
 
   bool _arrived = false;
   double _distanceRemaining, _durationRemaining;
   AppState state;
-
+  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+      FlutterLocalNotificationsPlugin();
+  AndroidInitializationSettings initializationSettingsAndroid;
+  IOSInitializationSettings initializationSettingsIOS;
+  InitializationSettings initializationSettings;
   List<String> placesList = [];
   bool searchActive = false;
 
- Color color1 = HexColor("#333132");//deep gray
-      Color color2  = HexColor("#F15A29"); //orange
-        int selectedIndex = 0;
+  Color color1 = HexColor("#333132"); //deep gray
+  Color color2 = HexColor("#F15A29"); //orange
+  int selectedIndex = 0;
 
   Position _currentPosition;
   FirebaseUser user;
@@ -64,15 +81,16 @@ class _HomeScreenState extends State<HomeScreen> {
   var point = <LatLng>[];
   List<Marker> allMarkers = [];
   List<Marker> searchMarker = [];
-  FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-      FlutterLocalNotificationsPlugin();
-  AndroidInitializationSettings initializationSettingsAndroid;
-  IOSInitializationSettings initializationSettingsIOS;
-  InitializationSettings initializationSettings;
+
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool status = false;
+  bool exist = false;
+
   bool val = true;
   bool notificationTime = true;
+  var finTime;
+  var finTimeSeconds;
+  int notificationMin, notificationMin2;
   Future<void> checkUser() async {
     user = await _auth.currentUser();
 
@@ -87,8 +105,28 @@ class _HomeScreenState extends State<HomeScreen> {
         documentReference.get().then((datasnapshot) {
           if (datasnapshot.exists) {
             val = datasnapshot.data['allowNotifications'];
-            notificationTime = datasnapshot.data['notificationTime'];
+            notificationTime = datasnapshot.data['NotificationTime'];
+            finTime = datasnapshot.data['finTime'].toDate();
+            final DateTime timeNow = DateTime.now();
+            var nowTimeSeconds = timeNow.toUtc().millisecondsSinceEpoch;
+            var finTimeSeconds = finTime.toUtc().millisecondsSinceEpoch;
+            if (finTimeSeconds > nowTimeSeconds) {
+              notificationMin = finTime.difference(timeNow).inMinutes;
+              if (notificationTime) {
+                print(notificationMin.toString());
+                showNotification(notificationMin);
+              } else {
+                notificationMin2 = notificationMin - 15;
+                print(notificationMin2.toString());
+                showNotification(notificationMin2);
+              }
+            }
           }
+        });
+        setState(() {
+          exist = true;
+
+          //print(exist.toString());
         });
       }
       //it exists
@@ -103,7 +141,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
   setMarkers() {
     return allMarkers;
   }
@@ -111,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
   addToMarkerList() async {
     setState(() {
       allMarkers.add(
-        new Marker(
+         Marker(
           width: 80.0,
           height: 80.0,
           point: new LatLng(latitude, longitude),
@@ -119,7 +156,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: new IconButton(
               icon: FaIcon(
                 FontAwesomeIcons.home,
-                color: Colors.redAccent,
+                color: color1,
                 size: 36,
               ),
               onPressed: () {},
@@ -160,9 +197,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget laodMapMarkers(BuildContext context) {
-    Color color2 = HexColor("#f05a2b");
-    Color color1 = HexColor("#223469");
-
     return StreamBuilder<QuerySnapshot>(
         stream: Firestore.instance.collection("places").snapshots(),
         builder: (context, snapshot) {
@@ -191,7 +225,7 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             }
             allMarkers.add(
-              new Marker(
+            Marker(
                 width: 80.0,
                 height: 80.0,
                 point: new LatLng(
@@ -207,96 +241,82 @@ class _HomeScreenState extends State<HomeScreen> {
                     onPressed: () {
                       showModalBottomSheet(
                           builder: (Builder) {
-                            return Container(
-                              color: Colors.white,
-                              child: Column(
-                                children: <Widget>[
-                                  Container(
-                                    width: double.infinity,
-                                    height: 80,
-                                    color: color1,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: SingleChildScrollView(
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceAround,
-                                          children: <Widget>[
-                                            Text(
-                                              snapshot.data.documents[i]
-                                                  ['name'],
-                                              textAlign: TextAlign.center,
-                                              style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontSize: 24),
-                                            ),
-                                            Text(
-                                                snapshot.data.documents[i]
-                                                    ['type'],
-                                                style: TextStyle(
-                                                    color: Colors.white,
-                                                    fontSize: 16))
-                                          ],
-                                        ),
-                                      ),
+                            return Padding(
+                              padding: const EdgeInsets.only(top:16.0,left: 16),
+                              child: Container(
+                                color: Colors.white,
+                                child: ListView(
+                                  children: <Widget>[
+                                    Text(
+                                      snapshot.data.documents[i]['name'],
+                                      textAlign: TextAlign.start,
+                                      style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          color: color1,
+                                          fontSize: 24),
                                     ),
-                                  ),
-                                  SingleChildScrollView(
-                                    child: ListTile(
+                                    Text(snapshot.data.documents[i]['type'],
+                                        style: TextStyle(
+                                            color: Colors.grey, fontSize: 16)),
+                                    Text(
+                                      'Open',
+                                      style: TextStyle(color: Colors.green),
+                                    ),
+                                    ListTile(
                                       leading: FaIcon(
                                         FontAwesomeIcons.mapMarker,
                                         color: color2,
                                         size: 24,
                                       ),
+                                      title: Text(
+                                          snapshot.data.documents[i]['address']),
+                                    ),
+                                    ListTile(
+                                      leading: FaIcon(
+                                        FontAwesomeIcons.clock,
+                                        color: color2,
+                                        size: 24,
+                                      ),
+                                      title: Row(
+                                        children: <Widget>[
+                                          Text(snapshot.data.documents[i]
+                                              ['fromTime']),
+                                          SizedBox(
+                                            width: 4,
+                                          ),
+                                          Text('to'),
+                                          SizedBox(
+                                            width: 4,
+                                          ),
+                                          Text(snapshot.data.documents[i]
+                                              ['toTime']),
+                                        ],
+                                      ),
+                                    ),
+                                    ListTile(
+                                      leading: FaIcon(
+                                        FontAwesomeIcons.phoneAlt,
+                                        color: color2,
+                                        size: 24,
+                                      ),
                                       title: Text(snapshot.data.documents[i]
-                                          ['address']),
+                                          ['phoneNumber']),
                                     ),
-                                  ),
-                                  ListTile(
-                                    leading: FaIcon(
-                                      FontAwesomeIcons.clock,
-                                      color: color2,
-                                      size: 24,
+                                    ListTile(
+                                      leading: FaIcon(
+                                        FontAwesomeIcons.peopleArrows,
+                                        color: color2,
+                                        size: 24,
+                                      ),
+                                      title: Text(snapshot.data
+                                              .documents[i]['customerNumbers']
+                                              .toString() +
+                                          "/" +
+                                          snapshot.data.documents[i]['capcity']
+                                              .toString()),
                                     ),
-                                    title: Row(
-                                      children: <Widget>[
-                                        Text(snapshot.data.documents[i]
-                                            ['fromTime']),
-                                        SizedBox(
-                                          width: 4,
-                                        ),
-                                        Text('to'),
-                                        SizedBox(
-                                          width: 4,
-                                        ),
-                                        Text(snapshot.data.documents[i]
-                                            ['toTime']),
-                                      ],
-                                    ),
-                                  ),
-                                  ListTile(
-                                    leading: FaIcon(
-                                      FontAwesomeIcons.phoneAlt,
-                                      color: color2,
-                                      size: 24,
-                                    ),
-                                    title: Text(snapshot.data.documents[i]
-                                        ['phoneNumber']),
-                                  ),
-                                  ListTile(
-                                    leading: FaIcon(
-                                      FontAwesomeIcons.peopleArrows,
-                                      color: color2,
-                                      size: 24,
-                                    ),
-                                    title: Text(snapshot.data
-                                            .documents[i]['customerNumbers']
-                                            .toString() +
-                                        "/" +
-                                        snapshot.data.documents[i]['capcity']
-                                            .toString()),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
                             );
                           },
@@ -338,15 +358,135 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
+  }
+
+  Future<void> initConnectivity() async {
+    ConnectivityResult result;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      print(e.toString());
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    switch (result) {
+      case ConnectivityResult.wifi:
+        setState(() {
+          isOffline = false;
+          dialogIsVisible = false;
+        });
+        break;
+      case ConnectivityResult.mobile:
+        setState(() {
+          isOffline = false;
+          dialogIsVisible = false;
+        });
+        break;
+      case ConnectivityResult.none:
+        setState(() => isOffline = true);
+        buildAlertDialog("Internet connection cannot be establised!");
+        break;
+      default:
+        setState(() => isOffline = true);
+        break;
+    }
+  }
+
+  void buildAlertDialog(String message) {
+    SchedulerBinding.instance.addPostFrameCallback((_) => setState(() {
+          if (isOffline && !dialogIsVisible) {
+            dialogIsVisible = true;
+            showDialog(
+                barrierDismissible: false,
+                context: ctx,
+                builder: (BuildContext context) {
+                  return AlertDialog(
+                    title: Text(
+                      message,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 14.0),
+                    ),
+                    content: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Icon(
+                          Icons.portable_wifi_off,
+                          color: color2,
+                          size: 36.0,
+                        ),
+                        canProceed
+                            ? Text(
+                                "Check your internet connection before proceeding.",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 12.0),
+                              )
+                            : Text(
+                                "Please! proceed by connecting to a internet connection",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    fontSize: 12.0, color: Colors.red),
+                              ),
+                      ],
+                    ),
+                    actions: <Widget>[
+                      RaisedButton(
+                        onPressed: () {
+                          SystemChannels.platform
+                              .invokeMethod('SystemNavigator.pop');
+                        },
+                        child: Text(
+                          "CLOSE THE APP",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                      RaisedButton(
+                        onPressed: () {
+                          if (isOffline) {
+                            setState(() {
+                              canProceed = false;
+                            });
+                          } else {
+                            Navigator.pop(ctx);
+                            //your code
+                          }
+                        },
+                        child: Text(
+                          "PROCEED",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  );
+                });
+          }
+        }));
+  }
+
+  @override
   void initState() {
+    initConnectivity();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
     state = AppState.normal;
 
     super.initState();
     getUserDoc();
     getData();
-     initializing();
-checkUser() ;
-      showNotifications();
+
+    initializing();
+    checkUser();
+
     if (widget.searchActive != null) {
       if (widget.searchActive) {
         state = AppState.afterSearch;
@@ -356,15 +496,21 @@ checkUser() ;
         //  navigateToSearchPlace();
 
       }
+
+      // if (status) {
+      //print(val.toString());
+
+      // if (val) {
+      // }
+      // }
     }
     //_getCurrentLocation();
     // determinewUserPlace();
-        initPlatformState();
-
+    initPlatformState();
   }
 
   Widget navigateToSearchPlace(String placeName) {
-     /*  _origin =
+    /*  _origin =
       Location(name: " Home", latitude: latitude, longitude: longitude);
    _destination = Location(
       name:placeName , latitude: widget.searchLatitude, longitude:widget.searchLongitude);*/
@@ -379,7 +525,7 @@ checkUser() ;
           child: new IconButton(
             icon: FaIcon(
               FontAwesomeIcons.mapMarkedAlt,
-              color: Colors.redAccent,
+              color: color2,
               size: 36,
             ),
             onPressed: () {},
@@ -387,7 +533,7 @@ checkUser() ;
         ),
       ),
     );
- searchMarker.add(
+    searchMarker.add(
       new Marker(
         width: 80.0,
         height: 80.0,
@@ -398,7 +544,7 @@ checkUser() ;
           child: new IconButton(
             icon: FaIcon(
               FontAwesomeIcons.home,
-              color: Colors.redAccent,
+              color: color2,
               size: 36,
             ),
             onPressed: () {},
@@ -424,10 +570,13 @@ checkUser() ;
 
   @override
   Widget build(BuildContext context) {
-     final _origin =
-      Location(name: "Home", latitude: 25.2193, longitude: 55.2738);
-final _destination = Location(
-      name:widget.searchName, latitude: widget.searchLatitude, longitude:  widget.searchLongitude);
+    ctx = context;
+    final _origin =
+        Location(name: "Home", latitude: 25.2193, longitude: 55.2738);
+    final _destination = Location(
+        name: widget.searchName,
+        latitude: widget.searchLatitude,
+        longitude: widget.searchLongitude);
 
     return (state == AppState.afterSearch)
         ? Scaffold(
@@ -438,32 +587,26 @@ final _destination = Location(
               title: Text(widget.searchName),
               backgroundColor: color1,
             ),
-            body:
-             navigateToSearchPlace(widget.searchName),
-                 floatingActionButton: FloatingActionButton(
-                child: FaIcon(
-                  FontAwesomeIcons.car,
-                  color: Colors.white,
-                ),
-                onPressed: () async {
-                  print(_origin.toString);
+            body: navigateToSearchPlace(widget.searchName),
+            floatingActionButton: FloatingActionButton(
+              child: FaIcon(
+                FontAwesomeIcons.car,
+                color: Colors.white,
+              ),
+              onPressed: () async {
+                print(_origin.toString);
                 await _directions.startNavigation(
                     origin: _origin,
                     destination: _destination,
                     mode: NavigationMode.drivingWithTraffic,
-                    simulateRoute: true, language: "English", units: VoiceUnits.metric);
+                    simulateRoute: true,
+                    language: "English",
+                    units: VoiceUnits.metric);
               },
-                
-                ),
- 
-    
-    
-  
-            
-        
+            ),
           )
         : Scaffold(
-           // drawer: PinpointDrawer(),
+            // drawer: PinpointDrawer(),
             appBar: AppBar(
               title: Text('Home'),
               backgroundColor: color1,
@@ -484,20 +627,17 @@ final _destination = Location(
                   color: Colors.white,
                 ),
                 onPressed: () {
-          pushNewScreen(
-        context,
-        screen: PlacesList(),
-        platformSpecific: false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-        withNavBar: true, // OPTIONAL VALUE. True by default.
-    );
-                 // Navigator.pushReplacementNamed(context, 'placesList');
+                  pushNewScreen(
+                    context,
+                    screen: PlacesList(),
+                    platformSpecific:
+                        false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+                    withNavBar: true, // OPTIONAL VALUE. True by default.
+                  );
                 }),
-
-                
-      
           );
   }
-  
+
   // Platform messages are asynchronous, so we initialize in an async method.
   Future<void> initPlatformState() async {
     // If the widget was removed from the tree while the asynchronous platform
@@ -512,20 +652,17 @@ final _destination = Location(
       setState(() {
         _arrived = arrived;
       });
-      if (arrived)
-        {
-          await Future.delayed(Duration(seconds: 3));
-          await _directions.finishNavigation();
-        }
+      if (arrived) {
+        await Future.delayed(Duration(seconds: 3));
+        await _directions.finishNavigation();
+      }
     });
 
     String platformVersion;
     // Platform messages may fail, so we use a try/catch PlatformException.
     try {
       platformVersion = await _directions.platformVersion;
-    } 
-    
-     catch(e) {
+    } catch (e) {
       platformVersion = 'Failed to get platform version.';
     }
 
@@ -533,43 +670,48 @@ final _destination = Location(
       _platformVersion = platformVersion;
     });
   }
-void initializing() async {
-    initializationSettingsAndroid = AndroidInitializationSettings('app_icon');
+
+  void initializing() async {
+    initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/launcher_icon');
     initializationSettingsIOS = IOSInitializationSettings(
         onDidReceiveLocalNotification: onDidReceiveLocalNotification);
     initializationSettings = InitializationSettings(
         initializationSettingsAndroid, initializationSettingsIOS);
     await flutterLocalNotificationsPlugin.initialize(initializationSettings,
-        onSelectNotification: selectNotification);
+        onSelectNotification: onSelectNotification);
   }
 
-  void showNotifications() async {
-    await notification();
-  }
-    Future selectNotification(String payload) async {
-    if (payload != null) {
-      print('notification payload: ' + payload);
-    }
-    
+  Future onSelectNotification(String payload) {
+    showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+              title: Text("PinPoint"),
+              content: Text("Your waiting list time is out: $payload"),
+            ));
   }
 
-  Future<void> notification() async {
-    var time = Time(15, 22, 0);
-
+  showNotification(int min) async {
+    print(finTime.toString());
+    var scheduledNotificationDateTime =
+        DateTime.now().add(Duration(minutes: min));
     AndroidNotificationDetails androidNotificationDetails =
         AndroidNotificationDetails(
-      'channel_ID',
-      'channel title',
-      'channel body',
-      priority: Priority.High,
-      importance: Importance.Max,
-      ticker: 'PinPoint',
-    );
+            'channel_ID', 'channel title', 'channel body',
+            //priority: Priority.High,
+            importance: Importance.Max,
+            ticker: 'test',
+            enableVibration: true);
     IOSNotificationDetails iosNotificationDetails = IOSNotificationDetails();
     NotificationDetails notificationDetails =
         NotificationDetails(androidNotificationDetails, iosNotificationDetails);
-    await flutterLocalNotificationsPlugin.showDailyAtTime(
-        0, "PinPoint","You have a new notification ",time,notificationDetails);
+
+    await flutterLocalNotificationsPlugin.schedule(
+        0,
+        'PinPoint ',
+        'You have a notification',
+        scheduledNotificationDateTime,
+        notificationDetails);
   }
 
   Future onDidReceiveLocalNotification(
@@ -578,15 +720,14 @@ void initializing() async {
       title: Text(title),
       content: Text(body),
       actions: <Widget>[
-        CupertinoDialogAction(child: Text('Ok'),
-        isDefaultAction: true,
-        onPressed: (){
-          print("notification pressed");
-        },
+        CupertinoDialogAction(
+          child: Text('Ok'),
+          isDefaultAction: true,
+          onPressed: () {
+            print("notification pressed");
+          },
         )
       ],
     );
   }
-
- 
 }

@@ -87,58 +87,70 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               children: <Widget>[
                 status
-                    ? ListTile(
-                        leading: Icon(
-                          Icons.person,
-                          color: color2,
-                          size: 24,
+                    ? Column(
+                      children: <Widget>[
+                        ListTile(
+                          leading: Icon(
+                            Icons.person,
+                            color: color2,
+                            size: 24,
+                          ),
+                          title: Text(
+                            'Account',
+                            style: TextStyle(color: color1, fontSize: 20),
+                          ),
+                          subtitle: Text(
+                            'Update account',
+                            style: TextStyle(fontSize: 16),
+                          ),
+                          onTap: () {
+                            pushNewScreen(
+                              context,
+                              screen: ProfileScreen(),
+                              platformSpecific:
+                                  false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+                              withNavBar:
+                                  true, // OPTIONAL VALUE. True by default.
+                            );
+                          },
                         ),
-                        title: Text(
-                          'Account',
-                          style: TextStyle(color: color1, fontSize: 20),
-                        ),
-                        subtitle: Text(
-                          'Update account',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                        Divider(),
+                      ])
+                    : Container(),
+                status
+                    ?Column(
+                      children: <Widget>[
+                                ListTile(
                         onTap: () {
                           pushNewScreen(
                             context,
-                            screen: ProfileScreen(),
+                            screen: NotificationsScreen(),
                             platformSpecific:
                                 false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
                             withNavBar:
                                 true, // OPTIONAL VALUE. True by default.
                           );
                         },
-                      )
+                        leading: Icon(
+                          Icons.notifications,
+                          color: color2,
+                          size: 24,
+                        ),
+                        title: Text(
+                          'Notifications',
+                          style: TextStyle(color: color1, fontSize: 20),
+                        ),
+                        subtitle: Text(
+                          'Manage notifications & tones',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                                      Divider(),
+
+                      ]
+                    ) 
+            
                     : Container(),
-                Divider(),
-                ListTile(
-                  onTap: () {
-                    pushNewScreen(
-                      context,
-                      screen: NotificationsScreen(),
-                      platformSpecific:
-                          false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-                      withNavBar: true, // OPTIONAL VALUE. True by default.
-                    );
-                  },
-                  leading: Icon(
-                    Icons.notifications,
-                    color: color2,
-                    size: 24,
-                  ),
-                  title: Text(
-                    'Notifications',
-                    style: TextStyle(color: color1, fontSize: 20),
-                  ),
-                  subtitle: Text(
-                    'Manage notifications & tones',
-                    style: TextStyle(fontSize: 16),
-                  ),
-                ),
-                Divider(),
                 ListTile(
                     leading: Icon(
                       Icons.help,
@@ -221,7 +233,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         tag: 'login',
                         child: RoundedButton(
                           color: color2,
-                          text: 'Sign In',
+                          text: 'Sign out',
                           onPress: () async {
                             final googleSignIn = GoogleSignIn();
                             await googleSignIn.signOut();
@@ -229,6 +241,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             await facebookLogin.logOut();
                             final _firebaseAuth = FirebaseAuth.instance;
                             await _firebaseAuth.signOut();
+                             pushNewScreen(
+                              context,
+                              screen: SettingsScreen(),
+                              platformSpecific:
+                                  false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+                              withNavBar:
+                                  true, // OPTIONAL VALUE. True by default.
+                            );
                           },
                         ))
                     : Hero(

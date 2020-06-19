@@ -14,7 +14,7 @@ class User {
   String profileImage = '';
   bool selected = false;
   String appIdentifier = 'Flutter ${Platform.operatingSystem}';
-
+  int points = 0;
   User(
       {this.email,
       this.firstName,
@@ -24,7 +24,11 @@ class User {
       this.lastOnlineTimestamp,
       this.settings,
       this.uid,
-      this.profileImage});
+      this.profileImage,
+      this.points
+      
+      }
+      );
 
   String fullName() {
     return '$firstName $lastName';
@@ -55,7 +59,8 @@ class User {
       'active': this.active,
       'lastOnlineTimestamp': this.lastOnlineTimestamp,
       "profileImage": this.profileImage,
-      'appIdentifier': this.appIdentifier
+      'appIdentifier': this.appIdentifier,
+      'points' :this.points
     };
   }
 }

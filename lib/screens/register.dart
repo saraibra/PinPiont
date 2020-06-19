@@ -4,6 +4,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:pin_point/models/user.dart';
 import 'package:pin_point/screens/home_screen.dart';
+import 'package:pin_point/screens/settings_screen.dart';
 //import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
@@ -91,8 +92,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
          'points': 0,
 
       }).whenComplete(() {
-        Navigator.push(
-            context, MaterialPageRoute(builder: (context) => HomeScreen()));
+        Navigator.of(context).push(MaterialPageRoute(
+          builder: (context) => SettingsScreen(
+              )));
       });
     }
   }

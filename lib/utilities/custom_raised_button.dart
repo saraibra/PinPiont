@@ -14,7 +14,7 @@ class CustomRaisedButton extends StatelessWidget {
       child: Material(
         elevation: 5.0,
         color: color,
-        borderRadius: BorderRadius.circular(30.0),
+        borderRadius: BorderRadius.circular(3.0),
         child: MaterialButton(
           minWidth: double.infinity,
           child: child,

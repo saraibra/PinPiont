@@ -9,6 +9,7 @@
            <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />  
  <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
 
     <application
@@ -73,6 +74,12 @@
         <data android:scheme="@string/fb_login_protocol_scheme" />
     </intent-filter>
 </activity>
+  <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+        <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"></action>
+            </intent-filter>
+        </receiver>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -85,12 +92,7 @@
                <meta-data android:name="com.google.android.geo.API_KEY"
              android:value="AIzaSyDW21Z9YHKICDIlYr-OKJxWqwTJVQ3GN2g"/>
 
-             <receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationBootReceiver">
-    <intent-filter>
-        <action android:name="android.intent.action.BOOT_COMPLETED"></action>
-    </intent-filter>
-</receiver>
-<receiver android:name="com.dexterous.flutterlocalnotifications.ScheduledNotificationReceiver" />
+       
 
     </application>
 </manifest>

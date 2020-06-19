@@ -13,6 +13,7 @@ import 'package:pin_point/models/user.dart';
 import 'package:pin_point/screens/home_screen.dart';
 import 'package:pin_point/screens/password_reset.dart';
 import 'package:pin_point/screens/register.dart';
+import 'package:pin_point/screens/settings_screen.dart';
 import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
 import 'package:flutter/services.dart';
@@ -57,12 +58,14 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   navigateToSignupScreen() {
-      pushNewScreen(
-        context,
-        screen: RegisterScreen(),
-        platformSpecific: false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-        withNavBar: true, // OPTIONAL VALUE. True by default.
-    );  }
+    pushNewScreen(
+      context,
+      screen: RegisterScreen(),
+      platformSpecific:
+          false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+      withNavBar: true, // OPTIONAL VALUE. True by default.
+    );
+  }
 
   final GoogleSignIn googleSignIn = GoogleSignIn();
   final FacebookLogin facebookLogin = new FacebookLogin();
@@ -91,28 +94,34 @@ class _LoginScreenState extends State<LoginScreen> {
         profileImage: user.photoUrl,
         phone: " ",
         active: true,
-        uid: user.uid);
+        uid: user.uid,
+        points: 0);
     await Firestore.instance
         .collection('users')
         .document(user.uid)
         .setData(userData.toJson())
         .then((onValue) {
       hideProgress();
-      Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => HomeScreen(
-                searchActive: false,
-              )));
+      pushNewScreen(
+        context,
+        screen: SettingsScreen(),
+        platformSpecific:
+            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+        withNavBar: true, // OPTIONAL VALUE. True by default.
+      );
     });
     return 'signInWithGoogle succeeded: $user';
   }
 
   navigateToPasswordResetScreen() {
-      pushNewScreen(
-        context,
-        screen: PasswordResset(),
-        platformSpecific: false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-        withNavBar: true, // OPTIONAL VALUE. True by default.
-    );  }
+    pushNewScreen(
+      context,
+      screen: PasswordResset(),
+      platformSpecific:
+          false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+      withNavBar: true, // OPTIONAL VALUE. True by default.
+    );
+  }
   //if user is loged out then signup page will open.
 
 // Show message for any kind of error occured in application
@@ -157,6 +166,13 @@ class _LoginScreenState extends State<LoginScreen> {
             email: _email, password: _password));
         setState(() {
           showSpinner = false;
+              pushNewScreen(
+        context,
+        screen: SettingsScreen(),
+        platformSpecific:
+            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+        withNavBar: true, // OPTIONAL VALUE. True by default.
+      );
         });
       } catch (e) {
         setState(() {
@@ -288,8 +304,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     SizedBox(height: 8.0),
                     Hero(
-                                          tag: 'facebook',
-                                          child: SocialSignInButton(
+                      tag: 'facebook',
+                      child: SocialSignInButton(
                         assetName: 'images/facebook_logo.png',
                         text: 'Sign in with Facebook',
                         textColor: Colors.white,
@@ -337,7 +353,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(fontSize: 20.0, color: color1),
                           textAlign: TextAlign.center),
                     ),
-             ],
+                  ],
                 ),
               ),
             ),
@@ -388,17 +404,21 @@ class _LoginScreenState extends State<LoginScreen> {
             profileImage: profile["picture"]["data"]["url"],
             phone: " ",
             active: true,
-            uid: userUid);
+            uid: userUid,
+            points: 0);
         await Firestore.instance
             .collection('users')
             .document(userUid)
             .setData(user.toJson())
             .then((onValue) {
           hideProgress();
-          Navigator.of(context).push(MaterialPageRoute(
-              builder: (context) => HomeScreen(
-                    searchActive: false,
-                  )));
+             pushNewScreen(
+        context,
+        screen: SettingsScreen(),
+        platformSpecific:
+            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+        withNavBar: true, // OPTIONAL VALUE. True by default.
+      );
         });
       });
     }
