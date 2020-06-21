@@ -7,10 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:pin_point/screens/image_edit.dart';
 import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
-import 'package:pin_point/utilities/drawer.dart';
 import 'package:path/path.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -284,7 +282,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
           title: Text('Update account'),
           backgroundColor: color1,
         ),
-        drawer: PinpointDrawer(),
         body: status
             ? Builder(
                 builder: (BuildContext context) => Container(

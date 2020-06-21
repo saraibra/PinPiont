@@ -14,6 +14,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:latlong/latlong.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.widget.dart';
 import 'package:pin_point/screens/places_list.dart';
+import 'package:pin_point/screens/waiting_list.dart';
 import 'package:pin_point/search/place_delegate.dart';
 import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
@@ -76,8 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
   FirebaseUser user;
   dynamic data1;
 
-  double latitude = 25.2193;
-  double longitude = 55.2738;
+  double latitude;
+  double longitude;
   var point = <LatLng>[];
   List<Marker> allMarkers = [];
   List<Marker> searchMarker = [];
@@ -148,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
   addToMarkerList() async {
     setState(() {
       allMarkers.add(
-         Marker(
+        Marker(
           width: 80.0,
           height: 80.0,
           point: new LatLng(latitude, longitude),
@@ -225,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             }
             allMarkers.add(
-            Marker(
+              Marker(
                 width: 80.0,
                 height: 80.0,
                 point: new LatLng(
@@ -242,7 +243,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       showModalBottomSheet(
                           builder: (Builder) {
                             return Padding(
-                              padding: const EdgeInsets.only(top:16.0,left: 16),
+                              padding:
+                                  const EdgeInsets.only(top: 16.0, left: 16),
                               child: Container(
                                 color: Colors.white,
                                 child: ListView(
@@ -268,8 +270,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                         color: color2,
                                         size: 24,
                                       ),
-                                      title: Text(
-                                          snapshot.data.documents[i]['address']),
+                                      title: Text(snapshot.data.documents[i]
+                                          ['address']),
                                     ),
                                     ListTile(
                                       leading: FaIcon(
@@ -407,8 +409,9 @@ class _HomeScreenState extends State<HomeScreen> {
     SchedulerBinding.instance.addPostFrameCallback((_) => setState(() {
           if (isOffline && !dialogIsVisible) {
             dialogIsVisible = true;
+            canProceed = false;
             showDialog(
-                barrierDismissible: false,
+                barrierDismissible: canProceed,
                 context: ctx,
                 builder: (BuildContext context) {
                   return AlertDialog(
@@ -425,17 +428,16 @@ class _HomeScreenState extends State<HomeScreen> {
                           color: color2,
                           size: 36.0,
                         ),
-                        canProceed
+                        !canProceed
                             ? Text(
                                 "Check your internet connection before proceeding.",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 12.0),
+                                style: TextStyle(fontSize: 14.0),
                               )
                             : Text(
                                 "Please! proceed by connecting to a internet connection",
                                 textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 12.0, color: Colors.red),
+                                style: TextStyle(fontSize: 12.0, color: color2),
                               ),
                       ],
                     ),
@@ -457,8 +459,11 @@ class _HomeScreenState extends State<HomeScreen> {
                               canProceed = false;
                             });
                           } else {
-                            Navigator.pop(ctx);
-                            //your code
+                            setState(() {
+                              canProceed = true;
+                              Navigator.pop(context);
+                            });
+//Navigator.pop(context);                            //your code
                           }
                         },
                         child: Text(
@@ -481,11 +486,14 @@ class _HomeScreenState extends State<HomeScreen> {
     state = AppState.normal;
 
     super.initState();
-    getUserDoc();
-    getData();
+    if (!isOffline) {
+      getUserDoc();
+      getData();
+      checkUser();
+    }
 
+    _getCurrentLocation();
     initializing();
-    checkUser();
 
     if (widget.searchActive != null) {
       if (widget.searchActive) {
@@ -572,7 +580,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     ctx = context;
     final _origin =
-        Location(name: "Home", latitude: 25.2193, longitude: 55.2738);
+        Location(name: "Home", latitude: latitude, longitude: longitude);
     final _destination = Location(
         name: widget.searchName,
         latitude: widget.searchLatitude,
@@ -620,7 +628,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     })
               ],
             ),
-            body: laodMapMarkers(context),
+            body: isOffline
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : laodMapMarkers(context),
             floatingActionButton: FloatingActionButton(
                 child: FaIcon(
                   FontAwesomeIcons.list,
@@ -685,10 +697,15 @@ class _HomeScreenState extends State<HomeScreen> {
   Future onSelectNotification(String payload) {
     showDialog(
         context: context,
-        builder: (_) => AlertDialog(
-              title: Text("PinPoint"),
-              content: Text("Your waiting list time is out: $payload"),
-            ));
+        builder: (_) {
+          pushNewScreen(
+            context,
+            screen: WaitingList(),
+            platformSpecific:
+                false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+            withNavBar: true, // OPTIONAL VALUE. True by default.
+          );
+        });
   }
 
   showNotification(int min) async {

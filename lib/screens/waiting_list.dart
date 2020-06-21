@@ -142,7 +142,7 @@ class _WaitingListState extends State<WaitingList> {
                                           list[index]['placeName'],
                                           textAlign: TextAlign.center,
                                           style: TextStyle(
-                                              fontSize: 36,
+                                              fontSize: 24,
                                               fontWeight: FontWeight.bold,
                                               color: color2),
                                         ),
@@ -160,7 +160,7 @@ class _WaitingListState extends State<WaitingList> {
                                                     "Out",
                                                   ],
                                                   textStyle: TextStyle(
-                                                      fontSize: 70.0,
+                                                      fontSize: 48.0,
                                                       fontFamily: "Canterbury",
                                                       color: color1),
                                                   textAlign: TextAlign.start,

@@ -52,8 +52,13 @@ class _LoginScreenState extends State<LoginScreen> {
   checkAuthentication() async {
     _auth.onAuthStateChanged.listen((user) async {
       if (user != null) {
-        Navigator.pushReplacementNamed(context, "home");
-      }
+pushNewScreen(
+      context,
+      screen: HomeScreen(),
+      platformSpecific:
+          false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+      withNavBar: true, // OPTIONAL VALUE. True by default.
+    );      }
     });
   }
 

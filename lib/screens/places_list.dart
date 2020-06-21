@@ -4,7 +4,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:pin_point/screens/home_screen.dart';
 import 'package:pin_point/screens/place_screen.dart';
 import 'package:pin_point/style/hexa_color.dart';
-import 'package:pin_point/utilities/drawer.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
 
 class PlacesList extends StatefulWidget {

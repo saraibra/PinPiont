@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.widget.dart';
 import 'package:pin_point/models/user.dart';
 import 'package:pin_point/screens/home_screen.dart';
 import 'package:pin_point/screens/settings_screen.dart';
@@ -92,9 +93,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
          'points': 0,
 
       }).whenComplete(() {
-        Navigator.of(context).push(MaterialPageRoute(
-          builder: (context) => SettingsScreen(
-              )));
+        pushNewScreen(
+        context,
+        screen: SettingsScreen(),
+        platformSpecific:
+            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+        withNavBar: true, // OPTIONAL VALUE. True by default.
+      );
       });
     }
   }
