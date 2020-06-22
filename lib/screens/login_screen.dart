@@ -36,7 +36,7 @@ class _LoginScreenState extends State<LoginScreen> {
   bool showSpinner = false;
   FirebaseUser mCurrentUser;
 
-  Color color1 = HexColor("#333132"); //deep gray
+  Color color1 = HexColor("#1e1e1e"); //deep gray
   Color color2 = HexColor("#F15A29"); //orange
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
@@ -52,13 +52,14 @@ class _LoginScreenState extends State<LoginScreen> {
   checkAuthentication() async {
     _auth.onAuthStateChanged.listen((user) async {
       if (user != null) {
-pushNewScreen(
-      context,
-      screen: HomeScreen(),
-      platformSpecific:
-          false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-      withNavBar: true, // OPTIONAL VALUE. True by default.
-    );      }
+        pushNewScreen(
+          context,
+          screen: HomeScreen(),
+          platformSpecific:
+              false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+          withNavBar: true, // OPTIONAL VALUE. True by default.
+        );
+      }
     });
   }
 
@@ -92,7 +93,20 @@ pushNewScreen(
 
     final FirebaseUser currentUser = await _auth.currentUser();
     assert(user.uid == currentUser.uid);
-    User userData = User(
+
+    DocumentSnapshot ds =
+        await Firestore.instance.collection('users').document(user.uid).get();
+if(ds.exists){
+    hideProgress();
+      pushNewScreen(
+        context,
+        screen: SettingsScreen(),
+        platformSpecific:
+            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+        withNavBar: true, // OPTIONAL VALUE. True by default.
+      );
+}else{
+User userData = User(
         firstName: user.displayName,
         lastName: " ",
         email: user.email,
@@ -115,6 +129,8 @@ pushNewScreen(
         withNavBar: true, // OPTIONAL VALUE. True by default.
       );
     });
+}
+    
     return 'signInWithGoogle succeeded: $user';
   }
 
@@ -153,8 +169,6 @@ pushNewScreen(
   @override
   void initState() {
     super.initState();
-
-    this.checkAuthentication();
   }
 
   void signin() async {
@@ -171,13 +185,13 @@ pushNewScreen(
             email: _email, password: _password));
         setState(() {
           showSpinner = false;
-              pushNewScreen(
-        context,
-        screen: SettingsScreen(),
-        platformSpecific:
-            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-        withNavBar: true, // OPTIONAL VALUE. True by default.
-      );
+          pushNewScreen(
+            context,
+            screen: SettingsScreen(),
+            platformSpecific:
+                false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+            withNavBar: true, // OPTIONAL VALUE. True by default.
+          );
         });
       } catch (e) {
         setState(() {
@@ -400,9 +414,20 @@ pushNewScreen(
         mCurrentUser = await _auth.currentUser();
 
         String userUid = mCurrentUser.uid;
+ DocumentSnapshot ds =
+        await Firestore.instance.collection('users').document(userUid).get();
+if(ds.exists){
+    hideProgress();
+      pushNewScreen(
+        context,
+        screen: SettingsScreen(),
+        platformSpecific:
+            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+        withNavBar: true, // OPTIONAL VALUE. True by default.
+      );
+}else{
 
-        print(userUid);
-        User user = User(
+     User user = User(
             firstName: profile['first_name'],
             lastName: profile['last_name'],
             email: profile['email'],
@@ -411,20 +436,24 @@ pushNewScreen(
             active: true,
             uid: userUid,
             points: 0);
-        await Firestore.instance
+             await Firestore.instance
             .collection('users')
             .document(userUid)
             .setData(user.toJson())
             .then((onValue) {
           hideProgress();
-             pushNewScreen(
-        context,
-        screen: SettingsScreen(),
-        platformSpecific:
-            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-        withNavBar: true, // OPTIONAL VALUE. True by default.
-      );
+          pushNewScreen(
+            context,
+            screen: SettingsScreen(),
+            platformSpecific:
+                false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+            withNavBar: true, // OPTIONAL VALUE. True by default.
+          );
         });
+}
+    
+       
+       
       });
     }
   }

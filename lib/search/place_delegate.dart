@@ -12,7 +12,7 @@ class PlaceDelegate extends SearchDelegate<String> {
   double searchLatitude;
  double searchLongitude;
  bool searchActive;
- Color color1 = HexColor("#333132");//deep gray
+ Color color1 = HexColor("#1e1e1e");//deep gray
       Color color2  = HexColor("#F15A29"); //orange
   PlaceDelegate(this.placesList);
   @override

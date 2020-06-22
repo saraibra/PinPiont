@@ -23,7 +23,7 @@ enum AppState {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Color color1 = HexColor("#333132"); //deep gray
+  Color color1 = HexColor("#1e1e1e");//deep gray
   Color color2 = HexColor("#F15A29"); //orange
   String updatedName;
   String phone;
@@ -154,7 +154,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     _image = image;
                   });
+                  if(image != null){
                   if (state == AppState.picked) _cropImage(context);
+
+                  }
                 }),
           ],
         ),
@@ -274,11 +277,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
         resizeToAvoidBottomPadding: false,
         appBar: AppBar(
-          leading: IconButton(
-              icon: Icon(FontAwesomeIcons.arrowLeft),
-              onPressed: () {
-                Navigator.canPop(context);
-              }),
+       
           title: Text('Update account'),
           backgroundColor: color1,
         ),
@@ -517,7 +516,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
         androidUiSettings: AndroidUiSettings(
             toolbarTitle: 'Cropper',
-            toolbarColor: Colors.deepOrange,
+            toolbarColor: color2,
             toolbarWidgetColor: Colors.white,
             initAspectRatio: CropAspectRatioPreset.original,
             lockAspectRatio: false),

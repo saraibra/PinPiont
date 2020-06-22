@@ -69,7 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<String> placesList = [];
   bool searchActive = false;
 
-  Color color1 = HexColor("#333132"); //deep gray
+  Color color1 = HexColor("#1e1e1e"); // gray
   Color color2 = HexColor("#F15A29"); //orange
   int selectedIndex = 0;
 
@@ -77,8 +77,8 @@ class _HomeScreenState extends State<HomeScreen> {
   FirebaseUser user;
   dynamic data1;
 
-  double latitude;
-  double longitude;
+  double latitude =25.1976;
+  double longitude = 55.2781;
   var point = <LatLng>[];
   List<Marker> allMarkers = [];
   List<Marker> searchMarker = [];
@@ -198,6 +198,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget laodMapMarkers(BuildContext context) {
+    bool availabiltyStatus = true;
+    DateTime now = new DateTime.now();
+    String hour = now.hour.toString();
+    String min = now.minute.toString();
+    String time  = hour+":"+min;
+    print(time);
     return StreamBuilder<QuerySnapshot>(
         stream: Firestore.instance.collection("places").snapshots(),
         builder: (context, snapshot) {
@@ -210,8 +216,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   .collection("places")
                   .where("id", isEqualTo: i)
                   .getDocuments();
+  if(time== snapshot.data.documents[i] ['toTime']){
+availabiltyStatus = false;
+print(availabiltyStatus);
+  }
+  else if(time== snapshot.data.documents[i] ['fromTime']) {
+    availabiltyStatus = true;
 
-              String time =
+    print(snapshot.data.documents[i] ['toTime']);
+
+  }
+   Firestore.instance.collection("places").document(snapshot.data.documents[i].documentID).updateData({
+      'availabiltyStatus': availabiltyStatus,
+    });
+            /*  String time =
                   new DateTime.now().millisecondsSinceEpoch.toString();
               Firestore.instance
                   .collection('places')
@@ -223,7 +241,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'totalCustomerCount': 1,
                 'remainingCustomerCount': 1,
                 'placeId': i,
-              });
+              });*/
             }
             allMarkers.add(
               Marker(
@@ -260,10 +278,11 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Text(snapshot.data.documents[i]['type'],
                                         style: TextStyle(
                                             color: Colors.grey, fontSize: 16)),
-                                    Text(
+                                   snapshot.data.documents[i]['availabiltyStatus']? Text(
                                       'Open',
-                                      style: TextStyle(color: Colors.green),
-                                    ),
+                                      style: TextStyle(color: Colors.green, fontSize: 16),
+                                    ):Text('Closed',
+                                      style: TextStyle(color: Colors.red.shade900, fontSize: 16),),
                                     ListTile(
                                       leading: FaIcon(
                                         FontAwesomeIcons.mapMarker,
@@ -492,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> {
       checkUser();
     }
 
-    _getCurrentLocation();
+   // _getCurrentLocation();
     initializing();
 
     if (widget.searchActive != null) {
@@ -526,9 +545,7 @@ class _HomeScreenState extends State<HomeScreen> {
       new Marker(
         width: 80.0,
         height: 80.0,
-        point: (widget.searchLatitude == null || widget.searchLongitude == null)
-            ? Container(child: Center(child: CircularProgressIndicator()))
-            : new LatLng(widget.searchLatitude, widget.searchLongitude),
+        point: new LatLng(widget.searchLatitude, widget.searchLongitude),
         builder: (ctx) => new Container(
           child: new IconButton(
             icon: FaIcon(

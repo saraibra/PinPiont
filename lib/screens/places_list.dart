@@ -17,7 +17,7 @@ class _PlacesListState extends State<PlacesList> {
 
   @override
   Widget build(BuildContext context) {
-    Color unselectedColor = HexColor("#333132"); //deep gray
+    Color unselectedColor = HexColor("#1e1e1e");//deep gray
     Color selectedColor = HexColor("#F15A29"); //orange
 
     return Scaffold(

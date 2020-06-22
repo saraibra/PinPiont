@@ -10,7 +10,7 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  Color color1 = HexColor("#333132"); //deep gray
+  Color color1 = HexColor("#1e1e1e");//deep gray
   Color color2 = HexColor("#F15A29");
   bool _canVibrate = true;
   bool val = true;

@@ -198,7 +198,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   Widget build(BuildContext context) {
     final double deviceWidth = MediaQuery.of(context).size.width;
     final double targetWidth = deviceWidth > 550.0 ? 500.0 : deviceWidth * 0.95;
- Color color1 = HexColor("#333132");//deep gray
+ Color color1 =HexColor("#1e1e1e");//deep gray
       Color color2  = HexColor("#F15A29"); //orange
     return ModalProgressHUD(
       inAsyncCall: showSpinner,

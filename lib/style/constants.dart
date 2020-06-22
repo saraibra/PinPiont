@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'hexa_color.dart';
 
-  Color color1 = HexColor("#333132"); //deep gray
+  Color color1 = HexColor("#1e1e1e"); //deep gray
   Color color2 = HexColor("#F15A29"); //orange
 
 

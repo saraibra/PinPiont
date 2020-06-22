@@ -1,0 +1,5 @@
+storePassword=pinpoint
+keyPassword=pinpoint
+keyAlias=key
+storeFile=\Users\sara\key.jks
+

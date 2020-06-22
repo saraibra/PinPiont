@@ -11,7 +11,6 @@ import 'package:pin_point/screens/profile_screen.dart';
 import 'package:pin_point/screens/register.dart';
 import 'package:pin_point/screens/settings_screen.dart';
 import 'package:pin_point/screens/waiting_list.dart';
-import 'package:pin_point/services/connection.dart';
 import 'package:pin_point/style/hexa_color.dart';
 import 'package:splashscreen/splashscreen.dart';
 import 'package:dynamic_theme/dynamic_theme.dart';

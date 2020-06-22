@@ -22,7 +22,7 @@ class _WaitingListState extends State<WaitingList> {
   int timeRemaining;
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
-  Color color1 = HexColor("#333132"); //deep gray
+  Color color1 = HexColor("#1e1e1e");//deep gray
   Color color2 = HexColor("#F15A29"); //orange
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
@@ -72,23 +72,22 @@ class _WaitingListState extends State<WaitingList> {
   }
 
   Widget showTimeRemaining(int timeRemaining, int totalTimeRemaining) {
-    return CircularStepProgressIndicator(
+    return StepProgressIndicator(
       totalSteps: totalTimeRemaining,
       currentStep: timeRemaining,
-      stepSize: 10,
+     // stepSize: 10,
       selectedColor: color2,
       unselectedColor: color1,
-      padding: 0,
-      width: 150,
-      height: 150,
-      selectedStepSize: 15,
+      padding: 8,
+      roundedEdges:Radius.circular(10),
+     // selectedStepSize: 15,
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Waiting List'), backgroundColor: color1),
+      appBar: AppBar(title: Text('WAITING LIST'), backgroundColor: color1),
       body: status
           ? Center(
               child: StreamBuilder(
@@ -141,9 +140,12 @@ class _WaitingListState extends State<WaitingList> {
                                         child: Text(
                                           list[index]['placeName'],
                                           textAlign: TextAlign.center,
-                                          style: TextStyle(
-                                              fontSize: 24,
+                                          style:
+   
+                                           TextStyle(
+                                              fontSize: 48,
                                               fontWeight: FontWeight.bold,
+                                             // fontFamily: ,
                                               color: color2),
                                         ),
                                       ),

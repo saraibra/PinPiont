@@ -19,7 +19,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  Color color1 = HexColor("#333132"); //deep gray
+  Color color1 =HexColor("#1e1e1e"); //deep gray
   Color color2 = HexColor("#F15A29"); //orange
   bool isSelected = false;
   FirebaseUser user;

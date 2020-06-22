@@ -20,7 +20,7 @@ class _BottomNavigationState extends State<BottomNavigation> {
   PersistentTabController _controller;
 DateTime dateTime;
 
- Color color1 = HexColor("#333132");//deep gray
+ Color color1 = HexColor("#1e1e1e");//deep gray
       Color color2  = HexColor("#F15A29"); 
   @override
   void initState() {
@@ -43,29 +43,29 @@ OffersScreen(),
   List<PersistentBottomNavBarItem> _navBarsItems() {
     return [
       PersistentBottomNavBarItem(
-        icon: FaIcon(FontAwesomeIcons.home),
-        title: ("Home"),
+        icon: FaIcon(FontAwesomeIcons.home,size: 20,),
+        title: (""),
         activeColor: color2,
         inactiveColor: color1,
         isTranslucent: false,
       ),
       PersistentBottomNavBarItem(
         icon: FaIcon(FontAwesomeIcons.gifts),
-        title: ("Offers"),
+        title: (""),
         activeColor: color2,
         inactiveColor: color1,
         isTranslucent: false,
       ),
       PersistentBottomNavBarItem(
         icon: FaIcon(FontAwesomeIcons.listAlt),
-        title: ("Waiting list"),
+        title: (""),
         activeColor: color2,
         inactiveColor: color1,
         isTranslucent: false,
       ),
       PersistentBottomNavBarItem(
         icon: Icon(Icons.settings),
-        title: ("Settings"),
+        title: (""),
          activeColor: color2,
         inactiveColor: color1,
         isTranslucent: false,
