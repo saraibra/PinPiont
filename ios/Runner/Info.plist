@@ -42,10 +42,8 @@
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<false/>
-	<key>LSApplicationQueriesSchemes</key>
-<!-- Google Sign-in Section -->
-<key>CFBundleURLTypes</key>
+		<false/>
+		<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleTypeRole</key>
@@ -56,13 +54,21 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleURLTypes</key>
+<array>
+    <!--
+    <dict>
+    ... Some other CFBundleURLTypes definition.
+    </dict>
+    -->
+    <dict>
         <key>CFBundleURLSchemes</key>
         <array>
             <!--
               Replace "000000000000" with your Facebook App ID here.
               **NOTE**: The scheme needs to start with `fb` and then your ID.
             -->
-            <string>fb000000000000</string>
+            <string>716837025745629</string>
         </array>
     </dict>
 </array>
@@ -83,9 +89,7 @@
     <string>fbauth2</string>
     <string>fbshareextension</string>
 </array>
-<array>
-    <string>itms</string>
-</array>
-
 </dict>
 </plist>
+
+       
