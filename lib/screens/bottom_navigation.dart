@@ -1,5 +1,9 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_icons/flutter_icons.dart';
+import 'package:flutter_screenutil/screenutil.dart';
 import 'package:persistent_bottom_nav_bar/models/persisten-bottom-nav-item.widget.dart';
 import 'package:persistent_bottom_nav_bar/models/persistent-bottom-nav-bar-styles.widget.dart';
 import 'package:persistent_bottom_nav_bar/models/persistent-nav-bar-scaffold.widget.dart';
@@ -18,55 +22,105 @@ class BottomNavigation extends StatefulWidget {
 
 class _BottomNavigationState extends State<BottomNavigation> {
   PersistentTabController _controller;
-DateTime dateTime;
+  DateTime dateTime;
 
- Color color1 = HexColor("#1e1e1e");//deep gray
-      Color color2  = HexColor("#F15A29"); 
+  Color color1 = HexColor("#1e1e1e"); //deep gray
+  Color color2 = HexColor("#F15A29");
+  FirebaseUser user;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool status = false;
+    bool waitingStatus = false;
+     
+  Future<void> checkUser() async {
+    user = await _auth.currentUser();
+
+    if (user != null) {
+      //it exists
+      setState(() {
+        status = true;
+         Firestore.instance
+          .collection("users")
+          .document(user.uid)
+          .get()
+          .then((DocumentSnapshot) {
+            setState(() {
+                      waitingStatus = DocumentSnapshot.data['waitingList'];
+
+            });
+      });
+      });
+    } else {
+      //not exists
+      setState(() {
+        status = false;
+      });
+    }
+  }
+
+ 
   @override
   void initState() {
     super.initState();
     _controller = PersistentTabController(initialIndex: 0);
-     dateTime = 
-  DateTime.now();
+    dateTime = DateTime.now();
+        checkUser();
+
   }
 
   List<Widget> _buildScreens() {
     return [
       HomeScreen(),
-    // FirebaseMessagingScreen(),
-OffersScreen(),
-      WaitingList(),
-      SettingsScreen(),
+      // FirebaseMessagingScreen(),
+   
+      OffersScreen(status: status,),
+      WaitingList(status:status,waitingStatus: waitingStatus,user: user,),
+      SettingsScreen(status: status,),
     ];
   }
 
   List<PersistentBottomNavBarItem> _navBarsItems() {
     return [
       PersistentBottomNavBarItem(
-        icon: FaIcon(FontAwesomeIcons.home,size: 20,),
-        title: (""),
+        titleFontSize: 10,
+        contentPadding: 0,
+        icon: Icon(
+          SimpleLineIcons.home
+        ),
+        title: ("Home"),
         activeColor: color2,
         inactiveColor: color1,
         isTranslucent: false,
       ),
       PersistentBottomNavBarItem(
-        icon: FaIcon(FontAwesomeIcons.gifts),
-        title: (""),
+         titleFontSize: 10,
+        contentPadding: 5,
+        icon:  Icon(
+          SimpleLineIcons.present
+        ),
+        title: ("Rewards"),
         activeColor: color2,
         inactiveColor: color1,
         isTranslucent: false,
       ),
       PersistentBottomNavBarItem(
-        icon: FaIcon(FontAwesomeIcons.listAlt),
-        title: (""),
+         icon: Icon(
+          SimpleLineIcons.list
+        ),
+         titleFontSize: 10,
+        contentPadding: 10,
+        title: ("Waiting List"),
         activeColor: color2,
         inactiveColor: color1,
         isTranslucent: false,
       ),
       PersistentBottomNavBarItem(
-        icon: Icon(Icons.settings),
-        title: (""),
-         activeColor: color2,
+         icon: Icon(
+          SimpleLineIcons.settings
+        ),
+         titleFontSize: 10,
+        contentPadding: 10,
+        title: ("Settings"),
+        activeColor: color2,
         inactiveColor: color1,
         isTranslucent: false,
       ),
@@ -74,24 +128,29 @@ OffersScreen(),
   }
 
   @override
-  Widget build(BuildContext context) {
-      return PersistentTabView(
+  Widget build(BuildContext context) 
+  {
+
+    return  PersistentTabView(
         controller: _controller,
         screens: _buildScreens(),
         items:
             _navBarsItems(), // Redundant here but defined to demonstrate for other than custom style
         confineInSafeArea: true,
         backgroundColor: Colors.white,
+        iconSize: 20,
+        navBarStyle:
+            NavBarStyle.style3, // Choose the nav bar style with this property
+        bottomPadding: 14,
+        showElevation: true,
+        navBarCurve: NavBarCurve.upperCorners,
         handleAndroidBackButtonPress: true,
         onItemSelected: (int) {
           setState(
-              () {
-
-            
-              }); // This is required to update the nav bar if Android back button is pressed
+              () {}); // This is required to update the nav bar if Android back button is pressed
         },
- itemCount: 4,
-        navBarStyle:
-            NavBarStyle.style3 // Choose the nav bar style with this property
-        );
-  }}
+        itemCount: 4,
+      
+    );
+  }
+}

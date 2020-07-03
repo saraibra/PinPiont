@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
+import 'package:pin_point/utilities/size_config.dart';
 
 class AppInfo extends StatefulWidget {
   @override
@@ -10,45 +11,57 @@ class AppInfo extends StatefulWidget {
 class _AppInfoState extends State<AppInfo> {
   Color color1 = HexColor("#1e1e1e"); //deep gray
   Color color2 = HexColor("#F15A29");
+  Color color3 = HexColor("#c0c0c0");
+
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
+
     return Scaffold(
-        appBar: AppBar(
-          title: Text('App Info'),
-          backgroundColor: color1,
-        ),
-        body: Container(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    'PinPoint',
-                    style: TextStyle(
-                        fontSize: 28, fontWeight: FontWeight.bold, color: color2),
-                  ),
-                  SizedBox(
-                    height: 8,
-                  ),
-                  Text(
-                    'Version 1.0.0',
-                    style: TextStyle(fontSize: 18, color: color2),
-                  ),
-                  
-                       
+        backgroundColor: color1,
+        body: Center(
+          child: Container(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Container(
+                  height: MediaQuery.of(context).size.height / 3,
+                  child: Column(
+                    children: <Widget>[
+                      Text(
+                        'PINPOINT',
+                        style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: color2),
+                      ),
+                      SizedBox(
+                        height: 8,
+                      ),
+                      Text(
+                        'Version 1.0.0',
+                        style: TextStyle(fontSize: 16, color: color3),
+                      ),
+                      SizedBox(
+                        height: 16,
+                      ),
                       Container(
-                           width: 150,
-                           height: 150,
-                           child: Image.asset(
-              'images/logo.png',
-             
-              fit: BoxFit.fill,
-            ),
-                         ),
-],
-              ),
+                        width: 80,
+                        height: 80,
+                        child: Image.asset('images/icon5.png'),
+                      ),
+                      SizedBox(
+                        height: 16,
+                      ),
+                      Text(
+                        ' © 2020 Pinpoint',
+                        style: TextStyle(fontSize: 16, color: color3),
+                      ),
+                    ],
+                  ),
+                ),
+
+              ],
             ),
           ),
         ));

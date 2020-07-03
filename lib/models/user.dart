@@ -15,6 +15,7 @@ class User {
   bool selected = false;
   String appIdentifier = 'Flutter ${Platform.operatingSystem}';
   int points = 0;
+  bool waitingList;
   User(
       {this.email,
       this.firstName,
@@ -25,10 +26,8 @@ class User {
       this.settings,
       this.uid,
       this.profileImage,
-      this.points
-      
-      }
-      );
+      this.points,
+      this.waitingList});
 
   String fullName() {
     return '$firstName $lastName';
@@ -45,7 +44,8 @@ class User {
             parsedJson['settings'] ?? {'allowPushNotifications': true}),
         phone: parsedJson['phone'] ?? "",
         uid: parsedJson['uid'] ?? parsedJson['uid'] ?? '',
-        profileImage: parsedJson['profileImage'] ?? "");
+        profileImage: parsedJson['profileImage'] ?? "",
+        waitingList: parsedJson['waitingList'] ?? false);
   }
 
   Map<String, dynamic> toJson() {
@@ -60,7 +60,8 @@ class User {
       'lastOnlineTimestamp': this.lastOnlineTimestamp,
       "profileImage": this.profileImage,
       'appIdentifier': this.appIdentifier,
-      'points' :this.points
+      'points': this.points,
+      'waitingList': this.waitingList
     };
   }
 }

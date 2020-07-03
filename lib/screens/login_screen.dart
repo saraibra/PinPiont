@@ -1,25 +1,31 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:connectivity/connectivity.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_facebook_login/flutter_facebook_login.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.widget.dart';
 import 'package:pin_point/models/user.dart';
+import 'package:pin_point/screens/bottom_navigation.dart';
 import 'package:pin_point/screens/home_screen.dart';
 import 'package:pin_point/screens/password_reset.dart';
 import 'package:pin_point/screens/register.dart';
 import 'package:pin_point/screens/settings_screen.dart';
+import 'package:pin_point/screens/sign_controller.dart';
 import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
 import 'package:flutter/services.dart';
+import 'package:pin_point/utilities/custom_raised_button.dart';
 import 'package:pin_point/utilities/helper.dart';
 
 import 'package:pin_point/utilities/rounded_button.dart';
+import 'package:pin_point/utilities/size_config.dart';
 import 'package:pin_point/utilities/social_signin_button.dart';
 import 'package:http/http.dart' as http;
 
@@ -33,11 +39,23 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  // for internet
+  bool dialogIsVisible = false;
+  BuildContext ctx;
+  bool canProceed = true;
+
+  bool isOffline = false;
+  final Connectivity _connectivity = Connectivity();
+  StreamSubscription<ConnectivityResult> _connectivitySubscription;
+  ///////
   bool showSpinner = false;
   FirebaseUser mCurrentUser;
 
   Color color1 = HexColor("#1e1e1e"); //deep gray
   Color color2 = HexColor("#F15A29"); //orange
+  Color color3 = HexColor("#c0c0c0");
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
 
 //Firebase Auth and .instance is use to directly contact to firebase
@@ -46,7 +64,6 @@ class _LoginScreenState extends State<LoginScreen> {
   // using for grab the form key for our form data
 
   //there are only 2 input in sigin page so declare here
-  String _email, _password;
 
 // checkAuthentication method is continuasly check wether the user is loged in or not
   checkAuthentication() async {
@@ -63,13 +80,82 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  navigateToSignupScreen() {
+  @override
+  void dispose() {
+    _connectivitySubscription.cancel();
+    super.dispose();
+  }
+
+  Future<void> initConnectivity() async {
+    ConnectivityResult result;
+    // Platform messages may fail, so we use a try/catch PlatformException.
+    try {
+      result = await _connectivity.checkConnectivity();
+    } on PlatformException catch (e) {
+      print(e.toString());
+    }
+
+    if (!mounted) {
+      return;
+    }
+
+    _updateConnectionStatus(result);
+  }
+
+  Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    SizeConfig().init(context);
+
+    switch (result) {
+      case ConnectivityResult.wifi:
+        setState(() {
+          isOffline = false;
+          dialogIsVisible = false;
+        });
+        break;
+      case ConnectivityResult.mobile:
+        setState(() {
+          isOffline = false;
+          dialogIsVisible = false;
+        });
+        break;
+      case ConnectivityResult.none:
+        setState(() => isOffline = true);
+        // buildAlertDialog("Internet connection cannot be establised!");
+        break;
+      default:
+        setState(() => isOffline = true);
+        break;
+    }
+  }
+
+  @override
+  void initState() {
+    initConnectivity();
+    _connectivitySubscription =
+        _connectivity.onConnectivityChanged.listen(_updateConnectionStatus);
+
+    super.initState();
+  }
+
+  navigateToHomePage() {
     pushNewScreen(
       context,
-      screen: RegisterScreen(),
+      screen: BottomNavigation(),
       platformSpecific:
           false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
       withNavBar: true, // OPTIONAL VALUE. True by default.
+    );
+  }
+
+  navigateToSignupScreen() {
+    pushNewScreen(
+      context,
+      screen: SignInController(
+        isOfline: isOffline,
+      ),
+      platformSpecific:
+          false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+      withNavBar: false, // OPTIONAL VALUE. True by default.
     );
   }
 
@@ -96,53 +182,45 @@ class _LoginScreenState extends State<LoginScreen> {
 
     DocumentSnapshot ds =
         await Firestore.instance.collection('users').document(user.uid).get();
-if(ds.exists){
-    hideProgress();
+    if (ds.exists) {
+      //  hideProgress();
       pushNewScreen(
         context,
-        screen: SettingsScreen(),
+        screen: BottomNavigation(),
         platformSpecific:
             false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
         withNavBar: true, // OPTIONAL VALUE. True by default.
       );
-}else{
-User userData = User(
-        firstName: user.displayName,
-        lastName: " ",
-        email: user.email,
-        profileImage: user.photoUrl,
-        phone: " ",
-        active: true,
-        uid: user.uid,
-        points: 0);
-    await Firestore.instance
-        .collection('users')
-        .document(user.uid)
-        .setData(userData.toJson())
-        .then((onValue) {
-      hideProgress();
-      pushNewScreen(
-        context,
-        screen: SettingsScreen(),
-        platformSpecific:
-            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-        withNavBar: true, // OPTIONAL VALUE. True by default.
-      );
-    });
-}
-    
+    } else {
+      User userData = User(
+          firstName: user.displayName,
+          lastName: " ",
+          email: user.email,
+          profileImage: user.photoUrl,
+          phone: " ",
+          active: true,
+          uid: user.uid,
+          points: 0,
+          waitingList: false);
+      await Firestore.instance
+          .collection('users')
+          .document(user.uid)
+          .setData(userData.toJson())
+          .then((onValue) {
+        //hideProgress();
+        pushNewScreen(
+          context,
+          screen: BottomNavigation(),
+          platformSpecific:
+              false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+          withNavBar: true, // OPTIONAL VALUE. True by default.
+        );
+      });
+    }
+
     return 'signInWithGoogle succeeded: $user';
   }
 
-  navigateToPasswordResetScreen() {
-    pushNewScreen(
-      context,
-      screen: PasswordResset(),
-      platformSpecific:
-          false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-      withNavBar: true, // OPTIONAL VALUE. True by default.
-    );
-  }
   //if user is loged out then signup page will open.
 
 // Show message for any kind of error occured in application
@@ -166,220 +244,335 @@ User userData = User(
   }
 
   // when the application will lauch then it will go for checkAuthentication
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  void signin() async {
-    if (_formKey.currentState.validate()) {
-      setState(() {
-        showSpinner = true;
-      });
-      _formKey.currentState.save();
-
-      // wrapping the firebase call to signInWithEmailAndPassword
-      //and in case of any error catch method will work
-      try {
-        AuthResult user = (await _auth.signInWithEmailAndPassword(
-            email: _email, password: _password));
-        setState(() {
-          showSpinner = false;
-          pushNewScreen(
-            context,
-            screen: SettingsScreen(),
-            platformSpecific:
-                false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-            withNavBar: true, // OPTIONAL VALUE. True by default.
-          );
-        });
-      } catch (e) {
-        setState(() {
-          showSpinner = false;
-        });
-        showError(e.message);
-      }
-    }
-  }
-
-  Widget _buildEmailTextField() {
-    return TextFormField(
-      decoration: KTextFieldDecoration.copyWith(
-        hintText: 'Enter your email',
-      ),
-      keyboardType: TextInputType.emailAddress,
-      validator: (String value) {
-        if (value.isEmpty ||
-            !RegExp(r"[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?")
-                .hasMatch(value)) {
-          return 'Please enter a valid email';
-        }
-      },
-      onSaved: (input) => _email = input,
-    );
-  }
-
-  Widget _buildPasswordTextField() {
-    return TextFormField(
-      decoration:
-          KTextFieldDecoration.copyWith(hintText: 'Enter your Password'),
-      obscureText: true,
-      validator: (String value) {
-        if (value.isEmpty || value.length < 6) {
-          return 'Password invalid';
-        }
-      },
-      onSaved: (input) => _password = input,
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
-    final double deviceWidth = MediaQuery.of(context).size.width;
-    final double targetWidth = deviceWidth > 550.0 ? 500.0 : deviceWidth * 0.95;
-    return ModalProgressHUD(
-      inAsyncCall: showSpinner,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text('Sign In'),
-          backgroundColor: color1,
-        ),
-        backgroundColor: Colors.white,
-        body: Container(
-          padding: EdgeInsets.only(top: 24.0, left: 16, right: 16),
-          child: SingleChildScrollView(
-            child: Container(
-              width: targetWidth,
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  children: <Widget>[
-                    _buildEmailTextField(),
-                    SizedBox(
-                      height: 16.0,
-                    ),
-                    _buildPasswordTextField(),
-                    SizedBox(
-                      height: 16.0,
-                    ),
-                    GestureDetector(
-                      onTap: () {
-                        navigateToPasswordResetScreen();
-                      },
-                      child: Text("Forget your password?",
-                          style: TextStyle(fontSize: 20.0, color: color1),
-                          textAlign: TextAlign.right),
-                    ),
-                    SizedBox(
-                      height: 16.0,
-                    ),
-                    Hero(
-                        tag: 'login',
-                        child: RoundedButton(
-                          color: color1,
-                          text: 'Sign In',
-                          onPress: () {
-                            signin();
-                          },
-                        )),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
-                      child: Row(
-                        children: <Widget>[
-                          Container(
-                            height: 1,
-                            width: deviceWidth / 3,
-                            color: color2,
-                          ),
-                          Padding(
-                            padding:
-                                const EdgeInsets.symmetric(horizontal: 10.0),
-                            child: Text(
-                              "OR",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: color2,
-                                fontSize: 28,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            height: 1,
-                            width: deviceWidth / 3,
-                            color: color2,
-                          ),
-                        ],
-                      ),
-                    ),
-                    Hero(
-                      tag: 'google',
-                      child: SocialSignInButton(
-                        assetName: 'images/google_logo.png',
-                        text: 'Sign in with Google',
-                        textColor: color1,
-                        color: Colors.white,
-                        onPressed: signInWithGoogle,
-                      ),
-                    ),
-                    SizedBox(height: 8.0),
-                    Hero(
-                      tag: 'facebook',
-                      child: SocialSignInButton(
-                        assetName: 'images/facebook_logo.png',
-                        text: 'Sign in with Facebook',
-                        textColor: Colors.white,
-                        color: Color(0xFF334D92),
-                        onPressed: () async {
-                          signInUsingFacebook();
-                          /*String uid =  _auth.currentUser().toString();
+    SizeConfig().init(context);
 
-    final facebookLogin = FacebookLogin();
-                      final result = await facebookLogin.logIn(['email']);
-                      switch (result.status) {
-                        case FacebookLoginStatus.loggedIn:
-                          showProgress(
-                              context, 'Logging in, please wait...', false);
-                          await FirebaseAuth.instance
-                              .signInWithCredential(
-                                  FacebookAuthProvider.getCredential(
-                                      accessToken: result.accessToken.token))
-                              .then((AuthResult authResult) async {
-                            User user =await getCurrentUser(uid);
-                            if (user == null) {
-                              _createUserFromFacebookLogin(
-                                  result, authResult.user.uid);
-                            } else {
-                           //   _syncUserDataWithFacebookData(result, user);
-                            }
-                          });
-                          break;
-                        case FacebookLoginStatus.cancelledByUser:
-                          break;
-                        case FacebookLoginStatus.error:
-                          showAlertDialog(context, 'Error',
-                              'Couldn\'t login via facebook.');
-                          break;
-                      }*/
-                        },
-                      ),
-                    ),
-                    SizedBox(height: 8.0),
-                    GestureDetector(
-                      onTap: () {
-                        navigateToSignupScreen();
-                      },
-                      child: Text("New to PinPoint? Sign up now",
-                          style: TextStyle(fontSize: 20.0, color: color1),
-                          textAlign: TextAlign.center),
-                    ),
-                  ],
+    final double deviceWidth = MediaQuery.of(context).size.width;
+    final double targetWidth = deviceWidth * 0.9;
+    return WillPopScope(
+      onWillPop: () => Future.value(false),
+      child: ModalProgressHUD(
+        inAsyncCall: showSpinner,
+        child: Scaffold(
+          key: _scaffoldKey,
+          backgroundColor: color1,
+          body: SingleChildScrollView(
+            physics: NeverScrollableScrollPhysics(),
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minWidth: MediaQuery.of(context).size.width,
+                minHeight: MediaQuery.of(context).size.height,
+              ),
+              child: IntrinsicHeight(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 16.0, horizontal: 16),
+                  child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 32.0),
+                          child: Container(
+                            width: SizeConfig.blockSizeHorizontal * 10,
+                            height: SizeConfig.blockSizeVertical * 10,
+                            child: Image.asset('images/icon5.png'),
+                          ),
+                        ),
+                         Container(
+                          alignment: Alignment.center,
+                            height: SizeConfig.screenHeight / 4,
+                            child: Column(
+                              
+                              children: <Widget>[
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 32.0),
+                                  child: Text(
+                                    "HELLO,",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: color2,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  "WELCOME TO PINPOINT.",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: color2,
+                                  ),
+                                ),
+                                SizedBox(height: 16.0),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    '''Sign in to get live data of your favourite place, plan your
+daily trips, earn reward points, and so much more...''',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: color2,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )),
+                             Container(
+                          height: SizeConfig.screenHeight / 2,
+                          width: deviceWidth-32,
+                          child: Column(
+                            children: <Widget>[
+                              Hero(
+                                tag: 'google',
+                                child: SocialSignInButton(
+                                    assetName: 'images/google_logo.png',
+                                    text: 'SIGN IN WITH GOOGLE',
+                                    textColor: color1,
+                                    color: Colors.white,
+                                    onPressed: () {
+                                      if (!isOffline) {
+                                        signInWithGoogle();
+                                      } else {
+                                        _displaySnackBar(context);
+                                      }
+                                    }),
+                              ),
+                              SizedBox(height: 16.0),
+                               Hero(
+                                tag: 'facebook',
+                                child: SocialSignInButton(
+                                  assetName: 'images/facebook_logo.png',
+                                  text: 'SIGN IN WITH FACEBOOK',
+                                  textColor: Colors.white,
+                                  color: Color(0xFF334D92),
+                                  onPressed: () async {
+                                    if (!isOffline) {
+                                      signInUsingFacebook();
+                                    } else {
+                                      _displaySnackBar(context);
+                                    }
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: 24.0),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  Container(
+                                    height: 1,
+                                    width: 50,
+                                    color: Colors.white,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    child: Text(
+                                      "OR",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    height: 1,
+                                    width: 50,
+                                    color: Colors.white,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 24.0),
+                              CustomRaisedButton(
+                                color: color2,
+                                child: Text(
+                                  'CREATE ACCOUNT',
+                                  textAlign: TextAlign.justify,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  navigateToSignupScreen();
+                                },
+                              ),
+                            ],
+                          ),)
+                      ]),
                 ),
               ),
             ),
           ),
+
+          /* Container(
+  alignment: Alignment.center,
+                 width:deviceWidth,
+                 
+
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                    child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+
+                      children: <Widget>[
+                        Padding(
+                          padding: const EdgeInsets.only(top: 32.0),
+                          child: Container(
+                            
+                            width: SizeConfig.blockSizeHorizontal * 10,
+                            height: SizeConfig.blockSizeVertical * 10,
+                            child: Image.asset('images/icon5.png'),
+                          ),
+                        ),
+                        Container(
+                          alignment: Alignment.center,
+                            height: SizeConfig.screenHeight / 4,
+                            child: Column(
+                              
+                              children: <Widget>[
+                                Padding(
+                                  padding: const EdgeInsets.only(top: 32.0),
+                                  child: Text(
+                                    "HELLO,",
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: color2,
+                                    ),
+                                  ),
+                                ),
+                                Text(
+                                  "WELCOME TO PINPOINT.",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: color2,
+                                  ),
+                                ),
+                                SizedBox(height: 16.0),
+                                Padding(
+                                  padding: const EdgeInsets.all(8.0),
+                                  child: Text(
+                                    '''Sign in to get live data of your favourite place, plan your
+daily trips, earn reward points, and so much more...''',
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                      color: color2,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )),
+                        Container(
+                          height: SizeConfig.screenHeight / 2,
+                          width: deviceWidth-32,
+                          child: Column(
+                            children: <Widget>[
+                              Hero(
+                                tag: 'google',
+                                child: SocialSignInButton(
+                                    assetName: 'images/google_logo.png',
+                                    text: 'SIGN IN WITH GOOGLE',
+                                    textColor: color1,
+                                    color: Colors.white,
+                                    onPressed: () {
+                                      if (!isOffline) {
+                                        signInWithGoogle();
+                                      } else {
+                                        _displaySnackBar(context);
+                                      }
+                                    }),
+                              ),
+                              SizedBox(height: 16.0),
+                              Hero(
+                                tag: 'facebook',
+                                child: SocialSignInButton(
+                                  assetName: 'images/facebook_logo.png',
+                                  text: 'SIGN IN WITH FACEBOOK',
+                                  textColor: Colors.white,
+                                  color: Color(0xFF334D92),
+                                  onPressed: () async {
+                                    if (!isOffline) {
+                                      signInUsingFacebook();
+                                    } else {
+                                      _displaySnackBar(context);
+                                    }
+                                  },
+                                ),
+                              ),
+                              SizedBox(height: 24.0),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: <Widget>[
+                                  Container(
+                                    height: 1,
+                                    width: 50,
+                                    color: Colors.white,
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 8.0),
+                                    child: Text(
+                                      "OR",
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    height: 1,
+                                    width: 50,
+                                    color: Colors.white,
+                                  ),
+                                ],
+                              ),
+                              SizedBox(height: 24.0),
+                              CustomRaisedButton(
+                                color: color2,
+                                child: Text(
+                                  'CREATE ACCOUNT',
+                                  textAlign: TextAlign.justify,
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                onPressed: () {
+                                  navigateToSignupScreen();
+                                },
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ),*/
         ),
       ),
     );
+  }
+
+  _displaySnackBar(BuildContext context) {
+    final snackBar = SnackBar(
+      content: Text(
+        'Please check your internet connection.',
+        style: TextStyle(color: color3),
+      ),
+    );
+    _scaffoldKey.currentState.showSnackBar(snackBar);
   }
 
   Future<User> getCurrentUser(String uid) async {
@@ -414,46 +607,45 @@ User userData = User(
         mCurrentUser = await _auth.currentUser();
 
         String userUid = mCurrentUser.uid;
- DocumentSnapshot ds =
-        await Firestore.instance.collection('users').document(userUid).get();
-if(ds.exists){
-    hideProgress();
-      pushNewScreen(
-        context,
-        screen: SettingsScreen(),
-        platformSpecific:
-            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-        withNavBar: true, // OPTIONAL VALUE. True by default.
-      );
-}else{
-
-     User user = User(
-            firstName: profile['first_name'],
-            lastName: profile['last_name'],
-            email: profile['email'],
-            profileImage: profile["picture"]["data"]["url"],
-            phone: " ",
-            active: true,
-            uid: userUid,
-            points: 0);
-             await Firestore.instance
+        DocumentSnapshot ds = await Firestore.instance
             .collection('users')
             .document(userUid)
-            .setData(user.toJson())
-            .then((onValue) {
-          hideProgress();
+            .get();
+        if (ds.exists) {
+          // hideProgress();
           pushNewScreen(
             context,
-            screen: SettingsScreen(),
+            screen: BottomNavigation(),
             platformSpecific:
                 false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
             withNavBar: true, // OPTIONAL VALUE. True by default.
           );
-        });
-}
-    
-       
-       
+        } else {
+          User user = User(
+              firstName: profile['first_name'],
+              lastName: profile['last_name'],
+              email: profile['email'],
+              profileImage: profile["picture"]["data"]["url"],
+              phone: " ",
+              active: true,
+              uid: userUid,
+              points: 0,
+              waitingList: false);
+          await Firestore.instance
+              .collection('users')
+              .document(userUid)
+              .setData(user.toJson())
+              .then((onValue) {
+            // hideProgress();
+            pushNewScreen(
+              context,
+              screen: BottomNavigation(),
+              platformSpecific:
+                  false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+              withNavBar: true, // OPTIONAL VALUE. True by default.
+            );
+          });
+        }
       });
     }
   }

@@ -1,5 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 import 'package:pin_point/style/constants.dart';
@@ -13,8 +14,11 @@ class PasswordResset extends StatefulWidget {
 
 class _PasswordRessetState extends State<PasswordResset> {
   String _email;
- Color color1 = HexColor("#1e1e1e");//deep gray
-      Color color2  = HexColor("#F15A29"); //orange
+  Color color1 = HexColor("#1e1e1e"); //deep gray
+  Color color2 = HexColor("#F15A29"); //orange
+  
+  Color color3 = HexColor("#c0c0c0");
+
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
@@ -73,7 +77,8 @@ class _PasswordRessetState extends State<PasswordResset> {
 
   Widget _buildEmailTextField() {
     return TextFormField(
-      decoration: KTextFieldDecoration.copyWith(
+      style: TextStyle(fontSize: 12,color: color3),
+      decoration: KTextFieldDecoration2.copyWith(
         hintText: 'Enter your email',
       ),
       keyboardType: TextInputType.emailAddress,
@@ -90,46 +95,46 @@ class _PasswordRessetState extends State<PasswordResset> {
 
   @override
   Widget build(BuildContext context) {
+        final double deviceWidth = MediaQuery.of(context).size.width;
+
     return ModalProgressHUD(
       inAsyncCall: showSpinner,
-      child: Scaffold(
-        appBar: AppBar(
-          title: Text(
-            'Reset Password',
-            style: TextStyle(color: Colors.white),
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle(statusBarColor: color1),
+        child: Scaffold(
+          appBar: AppBar(
+            automaticallyImplyLeading: false,
+            title: Center(child: Text('RESET PASSWORD')),
+            backgroundColor: color1,
           ),
-          backgroundColor: color1,
-        ),
-        backgroundColor: Colors.white,
-        body: Container(
-          child: Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                children: <Widget>[
-                  SizedBox(
-                    height: 32,
-                  ),
-                  Form(
-                      key: _formKey,
-                      child: Column(
-                        children: <Widget>[
-                          _buildEmailTextField(),
-                          SizedBox(
-                            height: 16,
-                          ),
-                          Hero(
-                              tag: 'submit',
-                              child: RoundedButton(
-                                color: color1,
-                                text: 'Submit ',
-                                onPress: () {
-                                  _changePassword();
-                                },
-                              )),
-                        ],
-                      )),
-                ],
+            backgroundColor: color1,
+          body: Container(
+            width:deviceWidth ,
+            child: Center(
+              child: Padding(
+                padding:
+                    const EdgeInsets.symmetric(vertical: 56.0, horizontal: 16),
+               
+                     child:   Form(
+                        key: _formKey,
+                        child: Column(
+                          children: <Widget>[
+                            _buildEmailTextField(),
+                            SizedBox(
+                              height: 16,
+                            ),
+                            Hero(
+                                tag: 'submit',
+                                child: RoundedButton(
+                                  color: color2,
+                                  text: 'Submit ',
+                                  onPress: () {
+                                    _changePassword();
+                                  },
+                                )),
+                          ],
+                        )),
+                 
               ),
             ),
           ),

@@ -2,6 +2,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_point/screens/home_screen.dart';
 import 'package:pin_point/style/hexa_color.dart';
+import 'package:flutter/services.dart';
+
 enum AppState {//i want to determine which screen to show
   normal,
   search,
@@ -12,6 +14,7 @@ class PlaceDelegate extends SearchDelegate<String> {
   double searchLatitude;
  double searchLongitude;
  bool searchActive;
+
  Color color1 = HexColor("#1e1e1e");//deep gray
       Color color2  = HexColor("#F15A29"); //orange
   PlaceDelegate(this.placesList);
@@ -60,9 +63,11 @@ class PlaceDelegate extends SearchDelegate<String> {
         .where("name", isEqualTo: sugesstionList[index])
         .snapshots()
         .listen((data) => data.documents.forEach((doc) {
-              searchLatitude = doc["coordinate"].latitude;
-              searchLongitude = doc["coordinate"].longitude;}));
-                Navigator.of(context).push(
+           try {
+      
+      searchLatitude = doc["coordinate"].latitude;
+              searchLongitude = doc["coordinate"].longitude;
+       Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => HomeScreen(
                       searchName: sugesstionList[index],
@@ -73,6 +78,11 @@ class PlaceDelegate extends SearchDelegate<String> {
                     ),
                   ),
                 );
+    } on PlatformException catch (e) {
+      print(e);
+    }
+             }));
+               
               },
               title: RichText(
                 text: TextSpan(

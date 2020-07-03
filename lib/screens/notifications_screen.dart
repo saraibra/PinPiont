@@ -10,7 +10,7 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  Color color1 = HexColor("#1e1e1e");//deep gray
+  Color color1 = HexColor("#1e1e1e"); //deep gray
   Color color2 = HexColor("#F15A29");
   bool _canVibrate = true;
   bool val = true;
@@ -68,17 +68,26 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     setState(() {
       if (value) {
         val = true;
-
+         if(status){
         _updateNotificationStatus(value);
+
+         }
       } else {
         val = false;
+ if(status){
         _updateNotificationStatus(value);
-      }
+
+         }      }
     });
   }
 
   _updateNotificationStatus(bool value) {
-    Firestore.instance.collection('user_places').document(user.uid).updateData({
+    Firestore.instance
+        .collection('users')
+        .document(user.uid)
+        .collection('user_places')
+        .document()
+        .updateData({
       'allowNotifications': value,
     });
   }
@@ -87,7 +96,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text('Notifications'),
+                    automaticallyImplyLeading: false,
+
+          title: Center(
+              child: Text(
+            'NOTIFICATIONS',
+          )),
           backgroundColor: color1,
         ),
         body: Container(
@@ -140,16 +154,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         onChanged: (value) {
                           if (value == '15 Min before time') {
                             Firestore.instance
-                                .collection('user_places')
+                                .collection('users')
                                 .document(user.uid)
+                                .collection('user_places')
+                                .document()
                                 .updateData({
                               'NotificationTime': false,
                             });
                             print('value');
                           } else {
-                             Firestore.instance
-                                .collection('user_places')
+                            Firestore.instance
+                                .collection('users')
                                 .document(user.uid)
+                                .collection('user_places')
+                                .document()
                                 .updateData({
                               'NotificationTime': true,
                             });

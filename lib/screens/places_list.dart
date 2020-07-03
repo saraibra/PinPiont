@@ -1,10 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:pin_point/screens/home_screen.dart';
 import 'package:pin_point/screens/place_screen.dart';
 import 'package:pin_point/style/hexa_color.dart';
+import 'package:pin_point/utilities/size_config.dart';
 import 'package:step_progress_indicator/step_progress_indicator.dart';
+import 'package:persistent_bottom_nav_bar/persistent-tab-view.widget.dart';
 
 class PlacesList extends StatefulWidget {
   @override
@@ -17,12 +19,15 @@ class _PlacesListState extends State<PlacesList> {
 
   @override
   Widget build(BuildContext context) {
-    Color unselectedColor = HexColor("#1e1e1e");//deep gray
+    Color unselectedColor = HexColor("#1e1e1e"); //deep gray
     Color selectedColor = HexColor("#F15A29"); //orange
+    SizeConfig().init(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home'),
+                  automaticallyImplyLeading: false,
+
+        title: Center(child: Text('HOME')),
         backgroundColor: unselectedColor,
       ),
       body: Padding(
@@ -34,9 +39,9 @@ class _PlacesListState extends State<PlacesList> {
                   .snapshots(),
               builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting)
-                  return CircularProgressIndicator();
+                  return Center(child: CircularProgressIndicator());
                 if (!snapshot.hasData) {
-                  return CircularProgressIndicator();
+                  return Center(child: CircularProgressIndicator());
                 } else {
                   final list = snapshot.data.documents;
 
@@ -54,8 +59,8 @@ class _PlacesListState extends State<PlacesList> {
                       int capictyPercentage = (result * 100).toInt();
                       if (result == 0.3 || result > 0.3) {
                         capcityReached = true;
-                        selectedColor = Colors.red;
-                        capictyPercentage = 100;
+                        selectedColor = selectedColor;
+                        capictyPercentage = 98;
                         ref.then((v) => Firestore.instance
                             .collection('places')
                             .document(v.documents[0].documentID)
@@ -74,17 +79,12 @@ class _PlacesListState extends State<PlacesList> {
                         children: <Widget>[
                           Card(
                             elevation: 8,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
                               child: Container(
-                                decoration: new BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: new BorderRadius.only(
-                                      topLeft: const Radius.circular(48.0),
-                                      topRight: const Radius.circular(48.0),
-                                      bottomLeft: const Radius.circular(48.0),
-                                      bottomRight: const Radius.circular(48.0),
-                                    )),
                                 child: ListTile(
                                     title: Padding(
                                       padding: const EdgeInsets.all(8.0),
@@ -113,7 +113,7 @@ class _PlacesListState extends State<PlacesList> {
                                             ),
                                             Padding(
                                               padding: const EdgeInsets.only(
-                                                  left: 8),
+                                                  right: 8),
                                               child: Text(
                                                 list[index]['customerNumbers']
                                                         .toString() +
@@ -128,10 +128,9 @@ class _PlacesListState extends State<PlacesList> {
                                         ),
                                         Padding(
                                           padding: const EdgeInsets.all(8.0),
-                                          child: Row(
-                                            children: <Widget>[
+                                          child: 
                                               SizedBox(
-                                                width: 250,
+                                                width: MediaQuery.of(context).size.width,
                                                 child: StepProgressIndicator(
                                                   totalSteps: 100,
                                                   currentStep:
@@ -144,8 +143,7 @@ class _PlacesListState extends State<PlacesList> {
                                                       Radius.circular(10),
                                                 ),
                                               ),
-                                            ],
-                                          ),
+                                           
                                         )
                                       ],
                                     ),
@@ -169,17 +167,30 @@ class _PlacesListState extends State<PlacesList> {
                   );
                 }
               })),
-      floatingActionButton: FloatingActionButton(
-          child: FaIcon(
-            FontAwesomeIcons.map,
-            color: Colors.white,
-          ),
-          onPressed: () {
-            Navigator.of(context).push(MaterialPageRoute(
-                builder: (context) => HomeScreen(
-                      searchActive: false,
-                    )));
-          }),
+      floatingActionButton: Padding(
+        padding: const EdgeInsets.only(bottom: 8.0),
+        child: Container(
+          height: SizeConfig.blockSizeHorizontal * 12,
+                width: SizeConfig.blockSizeHorizontal * 12,
+          child: FloatingActionButton(
+              child: Icon(
+                Ionicons.md_map,
+                color: Colors.white,
+              ),
+              onPressed: () {
+                pushNewScreen(
+                  context,
+                  screen: HomeScreen(
+                    searchActive: false,
+                  ),
+                  platformSpecific:
+                      false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+                  withNavBar: true, // OPTIONAL VALUE. True by default.
+                );
+              }),
+        ),
+      ),
     );
   }
+    
 }

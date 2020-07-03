@@ -4,12 +4,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
 import 'package:path/path.dart';
+import 'package:pin_point/utilities/size_config.dart';
 
 class ProfileScreen extends StatefulWidget {
   @override
@@ -23,7 +24,7 @@ enum AppState {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
-  Color color1 = HexColor("#1e1e1e");//deep gray
+  Color color1 = HexColor("#1e1e1e"); //deep gray
   Color color2 = HexColor("#F15A29"); //orange
   String updatedName;
   String phone;
@@ -123,6 +124,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
+
     Future<Widget> getImage(BuildContext context) async {
       Scaffold.of(context).showSnackBar(SnackBar(
         backgroundColor: color2,
@@ -131,7 +134,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           children: <Widget>[
             IconButton(
                 icon: Icon(
-                  FontAwesomeIcons.images,
+                  Ionicons.md_photos,
                 ),
                 onPressed: () async {
                   var image =
@@ -140,11 +143,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _image = image;
                     state = AppState.picked;
                   });
-
-                  if (state == AppState.picked) _cropImage(context);
+                  if (image != null) {
+                    if (state == AppState.picked) _cropImage(context);
+                  }
                 }),
             IconButton(
-                icon: Icon(FontAwesomeIcons.camera),
+                icon: Icon(
+                  Icons.camera_alt,
+                ),
                 onPressed: () async {
                   var image =
                       await ImagePicker.pickImage(source: ImageSource.camera);
@@ -154,9 +160,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
                     _image = image;
                   });
-                  if(image != null){
-                  if (state == AppState.picked) _cropImage(context);
-
+                  if (image != null) {
+                    if (state == AppState.picked) _cropImage(context);
                   }
                 }),
           ],
@@ -165,120 +170,179 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     Future<Widget> updateName(BuildContext context) async {
-      return showModalBottomSheet(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-          ),
-          isScrollControlled: true,
+      return showDialog<AlertDialog>(
           context: context,
-          builder: (context) {
-            return Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
-                child: Container(
-                  width: double.infinity,
-                  height: 350,
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        'Update user name',
-                        style: TextStyle(fontSize: 24, color: color2),
+          builder: (BuildContext context) {
+            return AlertDialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                actionsPadding: EdgeInsets.only(bottom: 16),
+                contentPadding: EdgeInsets.only(top: 32),
+                content: Container(
+                  width: SizeConfig.screenWidth - 64,
+                  height: 120,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Container(
+                      height: 70,
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              "UPDATE USER NAME",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: color2,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 16),
+                            Container(
+                                height: 70,
+                                child: SingleChildScrollView(
+                                  child: Column(children: <Widget>[
+                                    new TextFormField(
+                                      validator: (String value) {
+                                        if (value.isEmpty) {
+                                          return 'Invalid name !';
+                                        }
+                                      },
+                                      keyboardType: TextInputType.text,
+                                      decoration: KTextFieldDecoration.copyWith(
+                                          hintText: 'User Name'),
+                                      onSaved: (input) => updatedName = input,
+                                    ),
+                                ]),
+                                )),
+                          ],
+                        ),
                       ),
-                      SizedBox(
-                        height: 16,
-                      ),
-                      _buildFirstNameFormText(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          IconButton(
-                              icon: Icon(
-                                Icons.check,
-                                color: color2,
-                                size: 32,
-                              ),
-                              onPressed: () {
-                                if (_formKey.currentState.validate()) {
-                                  _formKey.currentState.save();
-                                  _updateUserName(updatedName);
-                                  Navigator.of(context).pop();
-                                }
-                              }),
-                          IconButton(
-                              icon: Icon(
-                                Icons.close,
-                                color: color2,
-                                size: 32,
-                              ),
-                              onPressed: () => Navigator.of(context).pop())
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ));
+                ),
+                actions: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: IconButton(
+                        icon: Icon(
+                          Icons.check,
+                          color: color2,
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState.validate()) {
+                            _formKey.currentState.save();
+                            try {
+                                  _updateUserName(updatedName);
+                                 // Navigator.of(context).pop();
+                              Navigator.pop(context);
+                            } catch (e) {}
+                          }
+                        }),
+                  ),
+                  SizedBox(
+                    width: 130,
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.close,
+                      color: status ? color2 : Colors.grey,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                ]);
           });
-    }
+ }
 
     Future<Widget> updatePhoneNumber(BuildContext context) async {
-      return showModalBottomSheet(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(25.0)),
-          ),
-          isScrollControlled: true,
+          return showDialog<AlertDialog>(
           context: context,
-          builder: (context) {
-            return Padding(
-                padding:
-                    const EdgeInsets.symmetric(vertical: 16.0, horizontal: 16),
-                child: Container(
-                  width: double.infinity,
-                  height: 350,
-                  child: Column(
-                    children: <Widget>[
-                      Text(
-                        'Update phone number',
-                        style: TextStyle(fontSize: 24, color: color2),
+          builder: (BuildContext context) {
+            return AlertDialog(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(10.0))),
+                actionsPadding: EdgeInsets.only(bottom: 16),
+                contentPadding: EdgeInsets.only(top: 32),
+                content: Container(
+                  width: SizeConfig.screenWidth - 64,
+                  height: 120,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Container(
+                      height: 60,
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          children: <Widget>[
+                            Text(
+                              "UPDATE PHONE NUMBER",
+                              style: TextStyle(
+                                  fontSize: 16,
+                                  color: color2,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            SizedBox(height: 16),
+                            Container(
+                                height: 70,
+                                child: SingleChildScrollView(
+                                  child: Column(children: <Widget>[
+                                    new TextFormField(
+                                      validator: (String value) {
+                                        if (value.isEmpty) {
+                                          return 'Invalid phone number!';
+                                        }
+                                      },
+                                      keyboardType: TextInputType.number,
+                                      decoration: KTextFieldDecoration.copyWith(
+                                          hintText: 'Phone Number'),
+                                      onSaved: (input) => phone = input,
+                                    ),
+                                ]),
+                                )),
+                          ],
+                        ),
                       ),
-                      SizedBox(
-                        height: 16,
-                      ),
-                      _buildPhoneFormText(),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: <Widget>[
-                          IconButton(
-                              icon: Icon(
-                                Icons.check,
-                                color: color2,
-                                size: 32,
-                              ),
-                              onPressed: () {
-                                if (_formKey1.currentState.validate()) {
-                                  _formKey1.currentState.save();
-                                  _updateUserPhone(phone);
-                                  Navigator.of(context).pop();
-                                }
-                              }),
-                          IconButton(
-                              icon: Icon(
-                                Icons.close,
-                                color: color2,
-                                size: 32,
-                              ),
-                              onPressed: () => Navigator.of(context).pop())
-                        ],
-                      ),
-                    ],
+                    ),
                   ),
-                ));
-          });
-    }
+                ),
+                actions: <Widget>[
+                  Padding(
+                    padding: const EdgeInsets.only(right: 16.0),
+                    child: IconButton(
+                        icon: Icon(
+                          Icons.check,
+                          color: color2,
+                        ),
+                        onPressed: () {
+                          if (_formKey.currentState.validate()) {
+                            _formKey.currentState.save();
+                            try {
+                                  _updateUserPhone(phone);
+                                
+                              Navigator.pop(context);
+                            } catch (e) {}
+                          }
+                        }),
+                  ),
+                  SizedBox(
+                    width: 130,
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.close,
+                      color: status ? color2 : Colors.grey,
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                ]);
+          }
+                );
+   }
 
     return Scaffold(
         resizeToAvoidBottomPadding: false,
         appBar: AppBar(
-       
-          title: Text('Update account'),
+          automaticallyImplyLeading: false,
+          title: Center(child: Text('UPDATE ACCOUNT')),
           backgroundColor: color1,
         ),
         body: status
@@ -299,22 +363,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               return CircularProgressIndicator();
                             } else {
                               final list = snapshot.data;
-                              return SingleChildScrollView(
-                                child: Column(
-                                  children: <Widget>[
-                                    Padding(
+                              return Column(
+                                children: <Widget>[
+                                  Container(
+                                    height: 2 * SizeConfig.screenHeight / 10,
+                                    child: Padding(
                                       padding: const EdgeInsets.only(
-                                          top: 8.0, bottom: 16),
+                                          top: 16.0, bottom: 8),
                                       child: Stack(
                                         alignment: Alignment.bottomRight,
                                         children: <Widget>[
                                           CircleAvatar(
-                                            radius: 70,
+                                            radius: 55,
                                             foregroundColor: color1,
                                             child: ClipOval(
                                               child: SizedBox(
-                                                width: 120,
-                                                height: 120,
+                                                width: 110,
+                                                height: 110,
                                                 child: (_image != null)
                                                     ? Image.file(_image,
                                                         fit: BoxFit.fill)
@@ -333,8 +398,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                           ),
                                           IconButton(
                                               icon: Icon(
-                                                Icons.camera_enhance,
-                                                size: 32,
+                                                Icons.camera_alt,
+                                                size: 36,
                                                 color: color2,
                                               ),
                                               onPressed: () {
@@ -344,148 +409,149 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                         ],
                                       ),
                                     ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Container(
-                                        width:
-                                            MediaQuery.of(context).size.width,
-                                        height:
-                                            MediaQuery.of(context).size.height,
-                                        child: Column(
-                                          children: <Widget>[
-                                            ListTile(
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                        left: 8.0, right: 8),
+                                    child: Container(
+                                      width: MediaQuery.of(context).size.width,
+                                      height: 7 *
+                                          MediaQuery.of(context).size.height /
+                                          12,
+                                      child: Column(
+                                        children: <Widget>[
+                                          ListTile(
+                                            leading: Icon(
+                                              Icons.person_pin,
+                                              size: 32,
+                                              color: color2,
+                                            ),
+                                            title: Text(
+                                              "User Name",
+                                              style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: color1),
+                                            ),
+                                            subtitle: Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 4.0,
+                                              ),
+                                              child: SingleChildScrollView(
+                                                scrollDirection:
+                                                    Axis.horizontal,
+                                                child: Row(
+                                                  children: <Widget>[
+                                                    Text(
+                                                      snapshot
+                                                          .data['firstName'],
+                                                      style: TextStyle(
+                                                          fontSize: 16,
+                                                          color: Colors.black),
+                                                    ),
+                                                    SizedBox(
+                                                      width: 4,
+                                                    ),
+                                                    Text(
+                                                      list['lastName'],
+                                                      style: TextStyle(
+                                                          fontSize: 16,
+                                                          color: Colors.black),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                            onTap: () => updateName(context),
+                                            trailing: IconButton(
+                                                icon: Icon(Icons.edit),
+                                                onPressed: () {}),
+                                          ),
+                                          Divider(),
+                                          ListTile(
+                                              onTap: () =>
+                                                  updatePhoneNumber(context),
                                               leading: Icon(
-                                                Icons.person_pin,
-                                                size: 32,
-                                                color: color1,
+                                                Icons.phone_android,
+                                                color: color2,
                                               ),
                                               title: Text(
-                                                "User name",
+                                                "Phone Number",
                                                 style: TextStyle(
                                                     fontSize: 18,
                                                     fontWeight: FontWeight.bold,
                                                     color: color1),
                                               ),
                                               subtitle: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: SingleChildScrollView(
-                                                  scrollDirection:
-                                                      Axis.horizontal,
-                                                  child: Row(
-                                                    children: <Widget>[
-                                                      Text(
-                                                        snapshot
-                                                            .data['firstName'],
-                                                        style: TextStyle(
-                                                            fontSize: 18,
-                                                            color:
-                                                                Colors.black),
-                                                      ),
-                                                      SizedBox(
-                                                        width: 4,
-                                                      ),
-                                                      Text(
-                                                        list['lastName'],
-                                                        style: TextStyle(
-                                                            fontSize: 18,
-                                                            color:
-                                                                Colors.black),
-                                                      ),
-                                                    ],
-                                                  ),
+                                                padding: const EdgeInsets.only(
+                                                  top: 4.0,
+                                                ),
+                                                child: Text(
+                                                  list['phone'],
+                                                  style: TextStyle(
+                                                      fontSize: 16,
+                                                      color: Colors.black),
                                                 ),
                                               ),
-                                              onTap: () => updateName(context),
                                               trailing: IconButton(
                                                   icon: Icon(Icons.edit),
-                                                  onPressed: () {}),
+                                                  onPressed: () {})),
+                                          Divider(),
+                                          ListTile(
+                                            leading: Icon(
+                                              Icons.email,
+                                              color: color2,
                                             ),
-                                            Divider(),
-                                            ListTile(
-                                                onTap: () =>
-                                                    updatePhoneNumber(context),
-                                                leading: Icon(
-                                                  Icons.phone_android,
-                                                  color: color1,
-                                                ),
-                                                title: Text(
-                                                  "Phone number",
-                                                  style: TextStyle(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: color1),
-                                                ),
-                                                subtitle: Padding(
-                                                  padding:
-                                                      const EdgeInsets.all(8.0),
-                                                  child: Text(
-                                                    list['phone'],
-                                                    style: TextStyle(
-                                                        fontSize: 18,
-                                                        color: Colors.black),
-                                                  ),
-                                                ),
-                                                trailing: IconButton(
-                                                    icon: Icon(Icons.edit),
-                                                    onPressed: () {})),
-                                            Divider(),
-                                            ListTile(
-                                              leading: Icon(
-                                                Icons.email,
-                                                color: color1,
+                                            title: Text(
+                                              "Email",
+                                              style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: color1),
+                                            ),
+                                            subtitle: Padding(
+                                              padding: const EdgeInsets.only(
+                                                top: 4.0,
                                               ),
-                                              title: Text(
-                                                "Email",
+                                              child: Text(
+                                                list['email'],
                                                 style: TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: color1),
-                                              ),
-                                              subtitle: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: Text(
-                                                  list['email'],
-                                                  style: TextStyle(
-                                                      fontSize: 18,
-                                                      color: Colors.black),
-                                                ),
+                                                    fontSize: 16,
+                                                    color: Colors.black),
                                               ),
                                             ),
-                                            Divider(),
-                                            ListTile(
-                                              leading: FaIcon(
-                                                FontAwesomeIcons.award,
-                                                color: color2,
-                                                size: 24,
-                                              ),
-                                              title: Text(
-                                                "You have reward",
+                                          ),
+                                          Divider(),
+                                          ListTile(
+                                            leading: Icon(
+                                              AntDesign.gift,
+                                              color: color2,
+                                              size: 24,
+                                            ),
+                                            title: Text(
+                                              "You have reward",
+                                              style: TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: color1),
+                                            ),
+                                            subtitle: Padding(
+                                              padding: const EdgeInsets.only(
+                                                  top: 4.0),
+                                              child: Text(
+                                                list['points'].toString() +
+                                                    " points",
                                                 style: TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: color1),
-                                              ),
-                                              subtitle: Padding(
-                                                padding:
-                                                    const EdgeInsets.all(8.0),
-                                                child: Text(
-                                                  list['points'].toString() +
-                                                      " points",
-                                                  style: TextStyle(
-                                                      fontSize: 18,
-                                                      color: Colors.black),
-                                                ),
+                                                    fontSize: 16,
+                                                    color: Colors.black),
                                               ),
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                        ],
                                       ),
                                     ),
-                                  ],
-                                ),
+                                  ),
+                                ],
                               );
                             }
                           }),
@@ -543,7 +609,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     Firestore.instance.collection('users').document(user.uid).updateData({
       'firstName': name,
     });
-     Firestore.instance.collection('users').document(user.uid).updateData({
+    Firestore.instance.collection('users').document(user.uid).updateData({
       'lastName': '',
     });
   }

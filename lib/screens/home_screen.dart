@@ -6,18 +6,17 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_icons/flutter_icons.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_mapbox_navigation/flutter_mapbox_navigation.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong/latlong.dart';
 import 'package:persistent_bottom_nav_bar/persistent-tab-view.widget.dart';
 import 'package:pin_point/screens/places_list.dart';
-import 'package:pin_point/screens/waiting_list.dart';
 import 'package:pin_point/search/place_delegate.dart';
-import 'package:pin_point/style/constants.dart';
 import 'package:pin_point/style/hexa_color.dart';
+import 'package:pin_point/utilities/size_config.dart';
 
 class HomeScreen extends StatefulWidget {
   final String searchName;
@@ -57,7 +56,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String _platformVersion = 'Unknown';
 
   MapboxNavigation _directions;
-
   bool _arrived = false;
   double _distanceRemaining, _durationRemaining;
   AppState state;
@@ -77,7 +75,7 @@ class _HomeScreenState extends State<HomeScreen> {
   FirebaseUser user;
   dynamic data1;
 
-  double latitude =25.1976;
+  double latitude = 25.1976;
   double longitude = 55.2781;
   var point = <LatLng>[];
   List<Marker> allMarkers = [];
@@ -96,18 +94,109 @@ class _HomeScreenState extends State<HomeScreen> {
     user = await _auth.currentUser();
 
     if (user != null) {
-      final snapShot = await Firestore.instance
-          .collection('user_places')
+      final QuerySnapshot result = await Firestore.instance
+          .collection("users")
           .document(user.uid)
-          .get();
-      if (snapShot.exists) {
-        DocumentReference documentReference =
-            Firestore.instance.collection("user_places").document(user.uid);
+          .collection("user_places")
+          .getDocuments();
+      // documents.forEach((data) => print(documents[0].documentID));
+      var list2 = result.documents;
+      for (int i = 0; i < list2.length; i++) {
+        final snapShot = await Firestore.instance
+            .collection("users")
+            .document(user.uid)
+            .collection('user_places')
+            .document(list2[i].documentID)
+            .get();
+        if (snapShot.exists) {
+          DocumentReference documentReference = Firestore.instance
+              .collection("users")
+              .document(user.uid)
+              .collection('user_places')
+              .document(list2[i].documentID);
+          documentReference.get().then((datasnapshot) {
+            if (datasnapshot.exists) {
+              val = datasnapshot.data['allowNotifications'];
+              notificationTime = datasnapshot.data['NotificationTime'];
+              finTime = datasnapshot.data['finTime'].toDate();
+
+              final DateTime timeNow = DateTime.now();
+              var nowTimeSeconds = timeNow.toUtc().millisecondsSinceEpoch;
+              var finTimeSeconds = finTime.toUtc().millisecondsSinceEpoch;
+              if (finTimeSeconds > nowTimeSeconds) {
+                notificationMin = finTime.difference(timeNow).inMinutes;
+                if (notificationTime) {
+                  print(notificationMin.toString());
+                  showNotification(notificationMin);
+                } else {
+                  notificationMin2 = notificationMin - 15;
+                  print(notificationMin2.toString());
+                  showNotification(notificationMin2);
+                }
+              }
+            }
+          });
+          //  val = snapShot.data[i]['allowNotifications'];
+          // notificationTime = snapShot.data[i]['NotificationTime'];
+          // finTime = snapShot.data[i]['finTime'].toDate();
+          // print(finTime.toString());
+
+          /*  StreamBuilder(
+            stream: Firestore.instance
+                .collection("users")
+                .document(user.uid)
+                .collection("user_places")
+                .snapshots(),
+            builder: (context, AsyncSnapshot<QuerySnapshot> snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+
+                return CircularProgressIndicator();
+              }
+
+              if (!snapshot.hasData) {
+
+                return CircularProgressIndicator();
+              } else {
+
+               
+                      final list = snapshot.data.documents;
+                      for (int i = 0; i < list.length; i++) {
+                        val = list[i]['allowNotifications'];
+                     
+                      }
+
+                      final DateTime timeNow = DateTime.now();
+                      var nowTimeSeconds =
+                          timeNow.toUtc().millisecondsSinceEpoch;
+                      var finTimeSeconds =
+                          finTime.toUtc().millisecondsSinceEpoch;
+                      if (finTimeSeconds > nowTimeSeconds) {
+                        notificationMin = finTime.difference(timeNow).inMinutes;
+                        if (notificationTime) {
+                          print(notificationMin.toString());
+                          showNotification(notificationMin);
+                        } else {
+                          notificationMin2 = notificationMin - 15;
+                          print(notificationMin2.toString());
+                          showNotification(notificationMin2);
+                        }
+                      }
+                   
+              }
+            });
+       DocumentReference documentReference = Firestore.instance
+            .collection("users")
+            .document(user.uid)
+            .collection('user_places')
+            .document(documents[0].documentID);
         documentReference.get().then((datasnapshot) {
           if (datasnapshot.exists) {
-            val = datasnapshot.data['allowNotifications'];
-            notificationTime = datasnapshot.data['NotificationTime'];
-            finTime = datasnapshot.data['finTime'].toDate();
+                                final list = datasnapshot.data;
+
+            val = datasnapshot.data[0]['allowNotifications'];
+            notificationTime = datasnapshot.data[0]['NotificationTime'];
+            finTime = datasnapshot.data[0]['finTime'].toDate();
+
             final DateTime timeNow = DateTime.now();
             var nowTimeSeconds = timeNow.toUtc().millisecondsSinceEpoch;
             var finTimeSeconds = finTime.toUtc().millisecondsSinceEpoch;
@@ -124,12 +213,15 @@ class _HomeScreenState extends State<HomeScreen> {
             }
           }
         });
-        setState(() {
-          exist = true;
+      */
+          setState(() {
+            exist = true;
 
-          //print(exist.toString());
-        });
+            //print(exist.toString());
+          });
+        }
       }
+
       //it exists
       setState(() {
         status = true;
@@ -155,8 +247,8 @@ class _HomeScreenState extends State<HomeScreen> {
           point: new LatLng(latitude, longitude),
           builder: (ctx) => new Container(
             child: new IconButton(
-              icon: FaIcon(
-                FontAwesomeIcons.home,
+              icon: Icon(
+                Foundation.home,
                 color: color1,
                 size: 36,
               ),
@@ -202,12 +294,13 @@ class _HomeScreenState extends State<HomeScreen> {
     DateTime now = new DateTime.now();
     String hour = now.hour.toString();
     String min = now.minute.toString();
-    String time  = hour+":"+min;
-    print(time);
+    String time = hour + ":" + min;
+    // print(time);
     return StreamBuilder<QuerySnapshot>(
         stream: Firestore.instance.collection("places").snapshots(),
         builder: (context, snapshot) {
-          if (!snapshot.hasData) return CircularProgressIndicator();
+          if (!snapshot.hasData)
+            return Center(child: CircularProgressIndicator());
           for (int i = 0; i < snapshot.data.documents.length; i++) {
             if (snapshot.data.documents[i]['coordinate'].latitude == latitude &&
                 snapshot.data.documents[i]['coordinate'].longitude ==
@@ -216,20 +309,30 @@ class _HomeScreenState extends State<HomeScreen> {
                   .collection("places")
                   .where("id", isEqualTo: i)
                   .getDocuments();
-  if(time== snapshot.data.documents[i] ['toTime']){
-availabiltyStatus = false;
-print(availabiltyStatus);
-  }
-  else if(time== snapshot.data.documents[i] ['fromTime']) {
-    availabiltyStatus = true;
+              if (time == snapshot.data.documents[i]['toTime']) {
+                availabiltyStatus = true;
+                print(availabiltyStatus);
+                Firestore.instance
+                    .collection("places")
+                    .document(snapshot.data.documents[i].documentID)
+                    .updateData({
+                  'availabiltyStatus': availabiltyStatus,
+                });
+              } else if (time == snapshot.data.documents[i]['fromTime']) {
+                availabiltyStatus = true;
+                print(availabiltyStatus);
 
-    print(snapshot.data.documents[i] ['toTime']);
+                Firestore.instance
+                    .collection("places")
+                    .document(snapshot.data.documents[i].documentID)
+                    .updateData({
+                  'availabiltyStatus': availabiltyStatus,
+                });
+                // print(snapshot.data.documents[i] ['toTime']);
 
-  }
-   Firestore.instance.collection("places").document(snapshot.data.documents[i].documentID).updateData({
-      'availabiltyStatus': availabiltyStatus,
-    });
-            /*  String time =
+              }
+
+              /*  String time =
                   new DateTime.now().millisecondsSinceEpoch.toString();
               Firestore.instance
                   .collection('places')
@@ -252,8 +355,8 @@ print(availabiltyStatus);
                     snapshot.data.documents[i]['coordinate'].longitude),
                 builder: (ctx) => new Container(
                   child: new IconButton(
-                    icon: FaIcon(
-                      FontAwesomeIcons.mapMarker,
+                    icon: Icon(
+                      Icons.place,
                       color: color2,
                       size: 36,
                     ),
@@ -278,14 +381,23 @@ print(availabiltyStatus);
                                     Text(snapshot.data.documents[i]['type'],
                                         style: TextStyle(
                                             color: Colors.grey, fontSize: 16)),
-                                   snapshot.data.documents[i]['availabiltyStatus']? Text(
-                                      'Open',
-                                      style: TextStyle(color: Colors.green, fontSize: 16),
-                                    ):Text('Closed',
-                                      style: TextStyle(color: Colors.red.shade900, fontSize: 16),),
+                                    snapshot.data.documents[i]
+                                            ['availabiltyStatus']
+                                        ? Text(
+                                            'Open',
+                                            style: TextStyle(
+                                                color: Colors.green,
+                                                fontSize: 16),
+                                          )
+                                        : Text(
+                                            'Closed',
+                                            style: TextStyle(
+                                                color: Colors.red.shade900,
+                                                fontSize: 16),
+                                          ),
                                     ListTile(
-                                      leading: FaIcon(
-                                        FontAwesomeIcons.mapMarker,
+                                      leading: Icon(
+                                        SimpleLineIcons.location_pin,
                                         color: color2,
                                         size: 24,
                                       ),
@@ -293,8 +405,10 @@ print(availabiltyStatus);
                                           ['address']),
                                     ),
                                     ListTile(
-                                      leading: FaIcon(
-                                        FontAwesomeIcons.clock,
+                                      leading: Icon(
+                                        SimpleLineIcons.clock,
+
+                                        // Foundation.clock,
                                         color: color2,
                                         size: 24,
                                       ),
@@ -315,8 +429,8 @@ print(availabiltyStatus);
                                       ),
                                     ),
                                     ListTile(
-                                      leading: FaIcon(
-                                        FontAwesomeIcons.phoneAlt,
+                                      leading: Icon(
+                                        SimpleLineIcons.phone,
                                         color: color2,
                                         size: 24,
                                       ),
@@ -324,8 +438,8 @@ print(availabiltyStatus);
                                           ['phoneNumber']),
                                     ),
                                     ListTile(
-                                      leading: FaIcon(
-                                        FontAwesomeIcons.peopleArrows,
+                                      leading: Icon(
+                                        SimpleLineIcons.people,
                                         color: color2,
                                         size: 24,
                                       ),
@@ -401,6 +515,8 @@ print(availabiltyStatus);
   }
 
   Future<void> _updateConnectionStatus(ConnectivityResult result) async {
+    SizeConfig().init(context);
+
     switch (result) {
       case ConnectivityResult.wifi:
         setState(() {
@@ -416,7 +532,7 @@ print(availabiltyStatus);
         break;
       case ConnectivityResult.none:
         setState(() => isOffline = true);
-        buildAlertDialog("Internet connection cannot be establised!");
+       // buildAlertDialog("Internet connection cannot be establised!");
         break;
       default:
         setState(() => isOffline = true);
@@ -425,76 +541,154 @@ print(availabiltyStatus);
   }
 
   void buildAlertDialog(String message) {
-    SchedulerBinding.instance.addPostFrameCallback((_) => setState(() {
-          if (isOffline && !dialogIsVisible) {
-            dialogIsVisible = true;
-            canProceed = false;
-            showDialog(
-                barrierDismissible: canProceed,
-                context: ctx,
-                builder: (BuildContext context) {
-                  return AlertDialog(
-                    title: Text(
-                      message,
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 14.0),
-                    ),
-                    content: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: <Widget>[
-                        Icon(
-                          Icons.portable_wifi_off,
-                          color: color2,
-                          size: 36.0,
+    double alertWidth = SizeConfig.blockSizeHorizontal * 50;
+
+    double alertHeight = SizeConfig.blockSizeVertical * 7;
+    SchedulerBinding.instance.addPostFrameCallback((_) => this.mounted
+        ? setState(() {
+            if (isOffline && !dialogIsVisible) {
+              dialogIsVisible = true;
+              canProceed = false;
+              showDialog(
+                  barrierDismissible: canProceed,
+                  context: ctx,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      actionsPadding:
+                          const EdgeInsets.only(bottom: 8.0, right: 12,left:12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.all(Radius.circular(10.0))),
+                      title: Container(
+                        width: alertWidth,
+                        height: alertHeight,
+                        child: Text(
+                          message,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(fontSize: 14.0),
                         ),
-                        !canProceed
-                            ? Text(
-                                "Check your internet connection before proceeding.",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 14.0),
-                              )
-                            : Text(
-                                "Please! proceed by connecting to a internet connection",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(fontSize: 12.0, color: color2),
+                      ),
+                      content: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: <Widget>[
+                          Icon(
+                            Icons.portable_wifi_off,
+                            color: color2,
+                            size: 36.0,
+                          ),
+                          !canProceed
+                              ? Text(
+                                  "Check your internet connection before proceeding.",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 12.0),
+                                )
+                              : Text(
+                                  "Please! proceed by connecting to a internet connection",
+                                  textAlign: TextAlign.center,
+                                  style:
+                                      TextStyle(fontSize: 12.0, color: color2),
+                                ),
+                        ],
+                      ),
+                      actions: <Widget>[
+                         Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: <Widget>[
+                           Container(
+                          width: alertWidth / 2,
+                          child: RaisedButton(
+                            color: color2,
+                            onPressed: () {
+                              SystemChannels.platform
+                                  .invokeMethod('SystemNavigator.pop');
+                            },
+                            child: Text(
+                              "CLOSE APP",
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 10),
+                            ),
+                          ),
+                        ),
+                        Container(
+                          width: alertWidth / 2,
+                          child: RaisedButton(
+                            color: color2,
+                            onPressed: () {
+                              if (isOffline) {
+                                setState(() {
+                                  canProceed = false;
+                                });
+                              } else {
+                                setState(() {
+                                  canProceed = true;
+                                  Navigator.pop(context);
+                                });
+                              }
+                            },
+                            child: Text(
+                              "PROCEED",
+                              style:
+                                  TextStyle(color: Colors.white, fontSize: 10),
+                            ),
+                          ),
+                        ),
+                        ])
+                       
+                        /* Padding(
+                          padding:
+                              const EdgeInsets.only(bottom: 8.0, right: 12),
+                          child: Row(
+                            children: <Widget>[
+                              Container(
+                                width: alertWidth / 2,
+                                child: RaisedButton(
+                                  color: color2,
+                                  onPressed: () {
+                                    SystemChannels.platform
+                                        .invokeMethod('SystemNavigator.pop');
+                                  },
+                                  child: Text(
+                                    "CLOSE APP",
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 10),
+                                  ),
+                                ),
                               ),
+                              SizedBox(
+                                width: alertWidth / 3,
+                              ),
+                              Container(
+                                width: alertWidth / 2,
+                                child: RaisedButton(
+                                  color: color2,
+                                  onPressed: () {
+                                    if (isOffline) {
+                                      setState(() {
+                                        canProceed = false;
+                                      });
+                                    } else {
+                                      setState(() {
+                                        canProceed = true;
+                                        Navigator.pop(context);
+                                      });
+                                    }
+                                  },
+                                  child: Text(
+                                    "PROCEED",
+                                    style: TextStyle(
+                                        color: Colors.white, fontSize: 10),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),*/
                       ],
-                    ),
-                    actions: <Widget>[
-                      RaisedButton(
-                        onPressed: () {
-                          SystemChannels.platform
-                              .invokeMethod('SystemNavigator.pop');
-                        },
-                        child: Text(
-                          "CLOSE THE APP",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                      RaisedButton(
-                        onPressed: () {
-                          if (isOffline) {
-                            setState(() {
-                              canProceed = false;
-                            });
-                          } else {
-                            setState(() {
-                              canProceed = true;
-                              Navigator.pop(context);
-                            });
-//Navigator.pop(context);                            //your code
-                          }
-                        },
-                        child: Text(
-                          "PROCEED",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  );
-                });
-          }
-        }));
+                    );
+                  });
+            }
+          })
+        : null);
   }
 
   @override
@@ -511,17 +705,17 @@ print(availabiltyStatus);
       checkUser();
     }
 
-   // _getCurrentLocation();
+    // _getCurrentLocation();
     initializing();
 
     if (widget.searchActive != null) {
       if (widget.searchActive) {
         state = AppState.afterSearch;
 
-        print(widget.searchLatitude);
-
         //  navigateToSearchPlace();
 
+      } else if (!widget.searchActive) {
+        state = AppState.normal;
       }
 
       // if (status) {
@@ -548,8 +742,8 @@ print(availabiltyStatus);
         point: new LatLng(widget.searchLatitude, widget.searchLongitude),
         builder: (ctx) => new Container(
           child: new IconButton(
-            icon: FaIcon(
-              FontAwesomeIcons.mapMarkedAlt,
+            icon: Icon(
+              Icons.place,
               color: color2,
               size: 36,
             ),
@@ -565,16 +759,7 @@ print(availabiltyStatus);
         point: (latitude == null || longitude == null)
             ? Container(child: Center(child: CircularProgressIndicator()))
             : new LatLng(latitude, longitude),
-        builder: (ctx) => new Container(
-          child: new IconButton(
-            icon: FaIcon(
-              FontAwesomeIcons.home,
-              color: color2,
-              size: 36,
-            ),
-            onPressed: () {},
-          ),
-        ),
+        builder: (ctx) => new Container(),
       ),
     );
 
@@ -595,6 +780,8 @@ print(availabiltyStatus);
 
   @override
   Widget build(BuildContext context) {
+    SizeConfig().init(context);
+
     ctx = context;
     final _origin =
         Location(name: "Home", latitude: latitude, longitude: longitude);
@@ -606,64 +793,116 @@ print(availabiltyStatus);
     return (state == AppState.afterSearch)
         ? Scaffold(
             appBar: AppBar(
-              leading: IconButton(
-                  icon: Icon(Icons.arrow_back),
-                  onPressed: () => Navigator.of(context).pop()),
-              title: Text(widget.searchName),
+              automaticallyImplyLeading: false,
+              title: Center(child: Text(widget.searchName)),
               backgroundColor: color1,
             ),
             body: navigateToSearchPlace(widget.searchName),
-            floatingActionButton: FloatingActionButton(
-              child: FaIcon(
-                FontAwesomeIcons.car,
-                color: Colors.white,
+            floatingActionButton: Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Container(
+                height: SizeConfig.blockSizeHorizontal * 12,
+                width: SizeConfig.blockSizeHorizontal * 12,
+                child: FloatingActionButton(
+                  child: Icon(
+                    Ionicons.ios_car,
+                    color: Colors.white,
+                  ),
+                  onPressed: () async {
+                    await _directions.startNavigation(
+                        origin: _origin,
+                        destination: _destination,
+                        mode: NavigationMode.drivingWithTraffic,
+                        simulateRoute: true,
+                        language: "English",
+                        units: VoiceUnits.metric);
+                  },
+                ),
               ),
-              onPressed: () async {
-                print(_origin.toString);
-                await _directions.startNavigation(
-                    origin: _origin,
-                    destination: _destination,
-                    mode: NavigationMode.drivingWithTraffic,
-                    simulateRoute: true,
-                    language: "English",
-                    units: VoiceUnits.metric);
-              },
             ),
           )
         : Scaffold(
-            // drawer: PinpointDrawer(),
             appBar: AppBar(
-              title: Text('Home'),
+              automaticallyImplyLeading: false,
+              title: Center(child: Text('HOME')),
               backgroundColor: color1,
-              actions: <Widget>[
-                IconButton(
-                    icon: Icon(Icons.search),
-                    onPressed: () {
-                      showSearch(
-                          context: context,
-                          delegate: PlaceDelegate(placesList));
-                    })
-              ],
+              actions: <Widget>[],
             ),
             body: isOffline
                 ? Center(
                     child: CircularProgressIndicator(),
                   )
-                : laodMapMarkers(context),
-            floatingActionButton: FloatingActionButton(
-                child: FaIcon(
-                  FontAwesomeIcons.list,
-                  color: Colors.white,
-                ),
-                onPressed: () {
-                  pushNewScreen(
-                    context,
-                    screen: PlacesList(),
-                    platformSpecific:
-                        false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-                    withNavBar: true, // OPTIONAL VALUE. True by default.
-                  );
-                }),
+                : Stack(
+                    children: <Widget>[
+                      // Replace this container with your Map widget
+                      Container(
+                        child: laodMapMarkers(context),
+                      ),
+                      Positioned(
+                        top: 16,
+                        right: 16,
+                        left: 16,
+                        child: GestureDetector(
+                          onTap: () {
+                            showSearch(
+                                context: context,
+                                delegate: PlaceDelegate(placesList));
+                          },
+                          child: Container(
+                            decoration: BoxDecoration(
+                                color: Colors.white,
+                                border: Border.all(
+                                  color: Colors.white,
+                                ),
+                                borderRadius:
+                                    BorderRadius.all(Radius.circular(10))),
+                            child: Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(left: 8.0),
+                                    child: Text("Search..."),
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: IconButton(
+                                      icon: Icon(Icons.search),
+                                      onPressed: () {
+                                        showSearch(
+                                            context: context,
+                                            delegate:
+                                                PlaceDelegate(placesList));
+                                      }),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+            floatingActionButton: Padding(
+              padding: const EdgeInsets.only(bottom: 16.0),
+              child: Container(
+                height: SizeConfig.blockSizeHorizontal * 12,
+                width: SizeConfig.blockSizeHorizontal * 12,
+                child: FloatingActionButton(
+                    child: Icon(
+                      SimpleLineIcons.list,
+                      color: Colors.white,
+                    ),
+                    onPressed: () {
+                      pushNewScreen(
+                        context,
+                        screen: PlacesList(),
+                        platformSpecific:
+                            false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
+                        withNavBar: true, // OPTIONAL VALUE. True by default.
+                      );
+                    }),
+              ),
+            ),
           );
   }
 
@@ -712,17 +951,9 @@ print(availabiltyStatus);
   }
 
   Future onSelectNotification(String payload) {
-    showDialog(
-        context: context,
-        builder: (_) {
-          pushNewScreen(
-            context,
-            screen: WaitingList(),
-            platformSpecific:
-                false, // OPTIONAL VALUE. False by default, which means the bottom nav bar will persist
-            withNavBar: true, // OPTIONAL VALUE. True by default.
-          );
-        });
+    if (payload != null) {
+      print('notification payload: ' + payload);
+    }
   }
 
   showNotification(int min) async {
@@ -734,7 +965,7 @@ print(availabiltyStatus);
             'channel_ID', 'channel title', 'channel body',
             //priority: Priority.High,
             importance: Importance.Max,
-            ticker: 'test',
+            ticker: 'PinPoint',
             enableVibration: true);
     IOSNotificationDetails iosNotificationDetails = IOSNotificationDetails();
     NotificationDetails notificationDetails =
