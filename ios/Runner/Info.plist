@@ -44,7 +44,8 @@
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<false/>
 	<key>LSApplicationQueriesSchemes</key>
-	<key>CFBundleURLTypes</key>
+<!-- Google Sign-in Section -->
+<key>CFBundleURLTypes</key>
 <array>
 	<dict>
 		<key>CFBundleTypeRole</key>
@@ -53,12 +54,10 @@
 		<array>
 			<!-- TODO Replace this value: -->
 			<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
-			<string>com.googleusercontent.apps.403968429836-mh71m6hgnmmbnqu0vi95qtvuj1s7tqgo</string>
+			<string>com.googleusercontent.apps.861823949799-vc35cprkp249096uujjn0vvnmcvjppkn</string>
 		</array>
 	</dict>
 </array>
-<key>CFBundleURLTypes</key>
-<array>
     <!--
     <dict>
     ... Some other CFBundleURLTypes definition.
